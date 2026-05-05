@@ -1,0 +1,289 @@
+{
+  "run_label": "global_audited_sobol_groups_N512",
+  "scenario": "global_audited",
+  "scenario_label": "Global Audited",
+  "enhancement_factor": 1.0,
+  "grouped": true,
+  "factor_labels": [
+    "basal_flux",
+    "shell_rheology",
+    "shell_tides",
+    "surface_boundary",
+    "porosity"
+  ],
+  "parameter_names": [
+    "q_basal_target_mW_m2",
+    "d_grain_mm",
+    "epsilon_0",
+    "T_surf_K",
+    "D_H2O_km",
+    "mu_ice_GPa",
+    "Q_v_kJ_mol",
+    "Q_b_kJ_mol",
+    "H_rad_pW_kg",
+    "f_porosity"
+  ],
+  "base_samples": 512,
+  "calc_second_order": false,
+  "schedule": [
+    128,
+    256,
+    512
+  ],
+  "seed": 42,
+  "salib_version": "unknown",
+  "n_workers": 12,
+  "physical_output_policy": "keep",
+  "reject_subcritical": false,
+  "expected_evaluations": 3584,
+  "numerical_success_rate": 1.0,
+  "n_numerical_failures": 0,
+  "physical_valid_rate": 1.0,
+  "error_counts": [],
+  "requested_outputs": [
+    "valid_flag",
+    "physical_flag",
+    "convective_flag",
+    "thickness_km",
+    "D_cond_km",
+    "D_conv_km",
+    "lid_fraction",
+    "Ra",
+    "Nu"
+  ],
+  "literature": [
+    {
+      "title": "Sobol (2001) Global sensitivity indices for nonlinear mathematical models and their Monte Carlo estimates",
+      "url": "https://doi.org/10.1016/S0378-4754(00)00270-6"
+    },
+    {
+      "title": "Saltelli et al. (2010) Variance based sensitivity analysis of model output",
+      "url": "https://doi.org/10.1016/j.cpc.2009.09.018"
+    },
+    {
+      "title": "SALib documentation: sample.sobol and analyze.sobol",
+      "url": "https://salib.readthedocs.io/en/latest/api/SALib.html"
+    },
+    {
+      "title": "Saltelli et al. (2019) Why so many published sensitivity analyses are false",
+      "url": "https://doi.org/10.1016/j.envsoft.2019.01.012"
+    },
+    {
+      "title": "Sarrazin, Pianosi, Wagener (2016) Global Sensitivity Analysis of environmental models: Convergence and validation",
+      "url": "https://doi.org/10.1016/j.envsoft.2016.02.005"
+    },
+    {
+      "title": "Ryan et al. (2018) Fast sensitivity analysis methods for computationally expensive models",
+      "url": "https://doi.org/10.5194/gmd-11-3131-2018"
+    }
+  ],
+  "top_total_order": {
+    "valid_flag": [
+      {
+        "factor": "porosity",
+        "ST": NaN,
+        "ST_conf": NaN,
+        "S1": NaN,
+        "S1_conf": NaN
+      },
+      {
+        "factor": "surface_boundary",
+        "ST": NaN,
+        "ST_conf": NaN,
+        "S1": NaN,
+        "S1_conf": NaN
+      },
+      {
+        "factor": "shell_tides",
+        "ST": NaN,
+        "ST_conf": NaN,
+        "S1": NaN,
+        "S1_conf": NaN
+      }
+    ],
+    "physical_flag": [
+      {
+        "factor": "porosity",
+        "ST": NaN,
+        "ST_conf": NaN,
+        "S1": NaN,
+        "S1_conf": NaN
+      },
+      {
+        "factor": "surface_boundary",
+        "ST": NaN,
+        "ST_conf": NaN,
+        "S1": NaN,
+        "S1_conf": NaN
+      },
+      {
+        "factor": "shell_tides",
+        "ST": NaN,
+        "ST_conf": NaN,
+        "S1": NaN,
+        "S1_conf": NaN
+      }
+    ],
+    "convective_flag": [
+      {
+        "factor": "basal_flux",
+        "ST": 0.6787750232003184,
+        "ST_conf": 0.08479377277290628,
+        "S1": 0.27511186943773447,
+        "S1_conf": 0.09639637120541117
+      },
+      {
+        "factor": "shell_rheology",
+        "ST": 0.6417509310257554,
+        "ST_conf": 0.08350143002726486,
+        "S1": 0.34601732175641764,
+        "S1_conf": 0.09251833280858549
+      },
+      {
+        "factor": "shell_tides",
+        "ST": 0.1810066728534182,
+        "ST_conf": 0.05001633587248519,
+        "S1": 0.03096819217726019,
+        "S1_conf": 0.05359907717422357
+      }
+    ],
+    "thickness_km": [
+      {
+        "factor": "basal_flux",
+        "ST": 0.8367071639487641,
+        "ST_conf": 0.0956101200693433,
+        "S1": 0.7671406810235825,
+        "S1_conf": 0.09764527478797473
+      },
+      {
+        "factor": "shell_tides",
+        "ST": 0.17755845501072165,
+        "ST_conf": 0.03947541500618687,
+        "S1": 0.10982125267792649,
+        "S1_conf": 0.049124375474455785
+      },
+      {
+        "factor": "shell_rheology",
+        "ST": 0.10539265493240588,
+        "ST_conf": 0.018341436065826302,
+        "S1": 0.036599663876182575,
+        "S1_conf": 0.0445986893616656
+      }
+    ],
+    "D_cond_km": [
+      {
+        "factor": "shell_rheology",
+        "ST": 0.8748915342029107,
+        "ST_conf": 0.16174067075320386,
+        "S1": 0.661092043693114,
+        "S1_conf": 0.1419198699363707
+      },
+      {
+        "factor": "shell_tides",
+        "ST": 0.2849504909268632,
+        "ST_conf": 0.1009342505023083,
+        "S1": 0.09583226151936904,
+        "S1_conf": 0.051395953637692685
+      },
+      {
+        "factor": "basal_flux",
+        "ST": 0.14560899445920847,
+        "ST_conf": 0.04536968445783662,
+        "S1": 0.04863689427110618,
+        "S1_conf": 0.05182503116963895
+      }
+    ],
+    "D_conv_km": [
+      {
+        "factor": "basal_flux",
+        "ST": 0.8246051604085516,
+        "ST_conf": 0.08711826417640056,
+        "S1": 0.7212450271299623,
+        "S1_conf": 0.10624879008408951
+      },
+      {
+        "factor": "shell_rheology",
+        "ST": 0.23545697723095566,
+        "ST_conf": 0.04967578719824988,
+        "S1": 0.13222643172252133,
+        "S1_conf": 0.05415827997380823
+      },
+      {
+        "factor": "shell_tides",
+        "ST": 0.07104015034182849,
+        "ST_conf": 0.020398769462687906,
+        "S1": 0.013950057543952284,
+        "S1_conf": 0.02946702607999715
+      }
+    ],
+    "lid_fraction": [
+      {
+        "factor": "basal_flux",
+        "ST": 0.6335481908466186,
+        "ST_conf": 0.07564047318156547,
+        "S1": 0.48531166599539477,
+        "S1_conf": 0.08681131389287232
+      },
+      {
+        "factor": "shell_rheology",
+        "ST": 0.4846479950038895,
+        "ST_conf": 0.07031280193812331,
+        "S1": 0.3592640484078036,
+        "S1_conf": 0.07834952476478546
+      },
+      {
+        "factor": "shell_tides",
+        "ST": 0.08219470139953007,
+        "ST_conf": 0.023132115385702055,
+        "S1": 0.015648859055283695,
+        "S1_conf": 0.03658773540015552
+      }
+    ],
+    "Ra": [
+      {
+        "factor": "shell_rheology",
+        "ST": 0.5347797232024176,
+        "ST_conf": 0.9691564311247072,
+        "S1": 0.1517841955387143,
+        "S1_conf": 0.3373992667689129
+      },
+      {
+        "factor": "basal_flux",
+        "ST": 0.4132808301926173,
+        "ST_conf": 0.7653114983886681,
+        "S1": 0.0138492080773741,
+        "S1_conf": 0.014139542216719269
+      },
+      {
+        "factor": "surface_boundary",
+        "ST": 0.00276325542612105,
+        "ST_conf": 0.005540981566283794,
+        "S1": 0.000229060703904934,
+        "S1_conf": 0.001059825627096707
+      }
+    ],
+    "Nu": [
+      {
+        "factor": "shell_rheology",
+        "ST": 0.724399991911922,
+        "ST_conf": 0.1646890617874984,
+        "S1": 0.5094149423523475,
+        "S1_conf": 0.1584687408453456
+      },
+      {
+        "factor": "basal_flux",
+        "ST": 0.5566200665549077,
+        "ST_conf": 0.18670022404429817,
+        "S1": 0.2606900164791996,
+        "S1_conf": 0.07467742864507379
+      },
+      {
+        "factor": "shell_tides",
+        "ST": 0.006373178267464266,
+        "ST_conf": 0.002517028994280889,
+        "S1": -0.0013342969188825905,
+        "S1_conf": 0.010846857110818972
+      }
+    ]
+  }
+}

@@ -1,0 +1,294 @@
+{
+  "run_label": "global_audited_sobol_params_N512",
+  "scenario": "global_audited",
+  "scenario_label": "Global Audited",
+  "enhancement_factor": 1.0,
+  "grouped": false,
+  "factor_labels": [
+    "q_basal_target_mW_m2",
+    "d_grain_mm",
+    "epsilon_0",
+    "T_surf_K",
+    "D_H2O_km",
+    "mu_ice_GPa",
+    "Q_v_kJ_mol",
+    "Q_b_kJ_mol",
+    "H_rad_pW_kg",
+    "f_porosity"
+  ],
+  "parameter_names": [
+    "q_basal_target_mW_m2",
+    "d_grain_mm",
+    "epsilon_0",
+    "T_surf_K",
+    "D_H2O_km",
+    "mu_ice_GPa",
+    "Q_v_kJ_mol",
+    "Q_b_kJ_mol",
+    "H_rad_pW_kg",
+    "f_porosity"
+  ],
+  "base_samples": 512,
+  "calc_second_order": false,
+  "schedule": [
+    128,
+    256,
+    512
+  ],
+  "seed": 42,
+  "salib_version": "unknown",
+  "n_workers": 12,
+  "physical_output_policy": "keep",
+  "reject_subcritical": false,
+  "expected_evaluations": 6144,
+  "numerical_success_rate": 1.0,
+  "n_numerical_failures": 0,
+  "physical_valid_rate": 1.0,
+  "error_counts": [],
+  "requested_outputs": [
+    "valid_flag",
+    "physical_flag",
+    "convective_flag",
+    "thickness_km",
+    "D_cond_km",
+    "D_conv_km",
+    "lid_fraction",
+    "Ra",
+    "Nu"
+  ],
+  "literature": [
+    {
+      "title": "Sobol (2001) Global sensitivity indices for nonlinear mathematical models and their Monte Carlo estimates",
+      "url": "https://doi.org/10.1016/S0378-4754(00)00270-6"
+    },
+    {
+      "title": "Saltelli et al. (2010) Variance based sensitivity analysis of model output",
+      "url": "https://doi.org/10.1016/j.cpc.2009.09.018"
+    },
+    {
+      "title": "SALib documentation: sample.sobol and analyze.sobol",
+      "url": "https://salib.readthedocs.io/en/latest/api/SALib.html"
+    },
+    {
+      "title": "Saltelli et al. (2019) Why so many published sensitivity analyses are false",
+      "url": "https://doi.org/10.1016/j.envsoft.2019.01.012"
+    },
+    {
+      "title": "Sarrazin, Pianosi, Wagener (2016) Global Sensitivity Analysis of environmental models: Convergence and validation",
+      "url": "https://doi.org/10.1016/j.envsoft.2016.02.005"
+    },
+    {
+      "title": "Ryan et al. (2018) Fast sensitivity analysis methods for computationally expensive models",
+      "url": "https://doi.org/10.5194/gmd-11-3131-2018"
+    }
+  ],
+  "top_total_order": {
+    "valid_flag": [
+      {
+        "factor": "f_porosity",
+        "ST": NaN,
+        "ST_conf": NaN,
+        "S1": NaN,
+        "S1_conf": NaN
+      },
+      {
+        "factor": "H_rad_pW_kg",
+        "ST": NaN,
+        "ST_conf": NaN,
+        "S1": NaN,
+        "S1_conf": NaN
+      },
+      {
+        "factor": "Q_b_kJ_mol",
+        "ST": NaN,
+        "ST_conf": NaN,
+        "S1": NaN,
+        "S1_conf": NaN
+      }
+    ],
+    "physical_flag": [
+      {
+        "factor": "f_porosity",
+        "ST": NaN,
+        "ST_conf": NaN,
+        "S1": NaN,
+        "S1_conf": NaN
+      },
+      {
+        "factor": "H_rad_pW_kg",
+        "ST": NaN,
+        "ST_conf": NaN,
+        "S1": NaN,
+        "S1_conf": NaN
+      },
+      {
+        "factor": "Q_b_kJ_mol",
+        "ST": NaN,
+        "ST_conf": NaN,
+        "S1": NaN,
+        "S1_conf": NaN
+      }
+    ],
+    "convective_flag": [
+      {
+        "factor": "q_basal_target_mW_m2",
+        "ST": 0.6787750232003184,
+        "ST_conf": 0.08479377277290638,
+        "S1": 0.2753184770949586,
+        "S1_conf": 0.09634951801616876
+      },
+      {
+        "factor": "Q_v_kJ_mol",
+        "ST": 0.4442891060947538,
+        "ST_conf": 0.07670896327024312,
+        "S1": 0.16201254223261383,
+        "S1_conf": 0.07496621492726346
+      },
+      {
+        "factor": "d_grain_mm",
+        "ST": 0.44017531807535787,
+        "ST_conf": 0.07517527659349,
+        "S1": 0.15759343400865342,
+        "S1_conf": 0.08021669645744288
+      }
+    ],
+    "thickness_km": [
+      {
+        "factor": "q_basal_target_mW_m2",
+        "ST": 0.8319757742976275,
+        "ST_conf": 0.09576397975311676,
+        "S1": 0.7541464813332768,
+        "S1_conf": 0.09601309575873408
+      },
+      {
+        "factor": "epsilon_0",
+        "ST": 0.17755845501072162,
+        "ST_conf": 0.03947541500618686,
+        "S1": 0.10983036173477585,
+        "S1_conf": 0.04910632499146422
+      },
+      {
+        "factor": "d_grain_mm",
+        "ST": 0.06981355471243134,
+        "ST_conf": 0.01597063922842123,
+        "S1": 0.024187852105442186,
+        "S1_conf": 0.03659775661077543
+      }
+    ],
+    "D_cond_km": [
+      {
+        "factor": "Q_v_kJ_mol",
+        "ST": 0.5566187137730039,
+        "ST_conf": 0.14801849439949982,
+        "S1": 0.36493013874675584,
+        "S1_conf": 0.11187570120644193
+      },
+      {
+        "factor": "d_grain_mm",
+        "ST": 0.49616176639701337,
+        "ST_conf": 0.11877025890133312,
+        "S1": 0.3125277340881465,
+        "S1_conf": 0.09362936479432826
+      },
+      {
+        "factor": "epsilon_0",
+        "ST": 0.2849504909268632,
+        "ST_conf": 0.1009342505023085,
+        "S1": 0.09584940936620667,
+        "S1_conf": 0.05139396807400605
+      }
+    ],
+    "D_conv_km": [
+      {
+        "factor": "q_basal_target_mW_m2",
+        "ST": 0.8209163664287753,
+        "ST_conf": 0.0877428137025033,
+        "S1": 0.7072816554979129,
+        "S1_conf": 0.10413258636217052
+      },
+      {
+        "factor": "Q_v_kJ_mol",
+        "ST": 0.14367976891112894,
+        "ST_conf": 0.03672523154968755,
+        "S1": 0.07209015094866507,
+        "S1_conf": 0.03979822546711195
+      },
+      {
+        "factor": "d_grain_mm",
+        "ST": 0.13527436763613812,
+        "ST_conf": 0.0313452277833301,
+        "S1": 0.05818001200333175,
+        "S1_conf": 0.047011093580335256
+      }
+    ],
+    "lid_fraction": [
+      {
+        "factor": "q_basal_target_mW_m2",
+        "ST": 0.6316889253209617,
+        "ST_conf": 0.07555192542023781,
+        "S1": 0.4824557354726036,
+        "S1_conf": 0.08656595502508604
+      },
+      {
+        "factor": "Q_v_kJ_mol",
+        "ST": 0.30156435686018146,
+        "ST_conf": 0.0533407197314098,
+        "S1": 0.1867994234578187,
+        "S1_conf": 0.06318393359788259
+      },
+      {
+        "factor": "d_grain_mm",
+        "ST": 0.28312506199592796,
+        "ST_conf": 0.05075319220145409,
+        "S1": 0.16941666945625702,
+        "S1_conf": 0.06466345717869727
+      }
+    ],
+    "Ra": [
+      {
+        "factor": "d_grain_mm",
+        "ST": 0.530385529676861,
+        "ST_conf": 1.2016750692776341,
+        "S1": 0.04737126753174976,
+        "S1_conf": 0.11448057287239659
+      },
+      {
+        "factor": "q_basal_target_mW_m2",
+        "ST": 0.42861409653301064,
+        "ST_conf": 0.8088689715075091,
+        "S1": 0.013097112561360267,
+        "S1_conf": 0.014717001011127974
+      },
+      {
+        "factor": "Q_v_kJ_mol",
+        "ST": 0.30665568803219084,
+        "ST_conf": 0.5382463614995516,
+        "S1": 0.02284655328920311,
+        "S1_conf": 0.06569305163460477
+      }
+    ],
+    "Nu": [
+      {
+        "factor": "q_basal_target_mW_m2",
+        "ST": 0.5589603212909008,
+        "ST_conf": 0.19105229106994595,
+        "S1": 0.2529194407748496,
+        "S1_conf": 0.07265925985800237
+      },
+      {
+        "factor": "d_grain_mm",
+        "ST": 0.4631835032201466,
+        "ST_conf": 0.15845824852706922,
+        "S1": 0.27032681961123267,
+        "S1_conf": 0.11924426600874673
+      },
+      {
+        "factor": "Q_v_kJ_mol",
+        "ST": 0.3275710507682727,
+        "ST_conf": 0.1013511320129132,
+        "S1": 0.16897918288734304,
+        "S1_conf": 0.0659873686623113
+      }
+    ]
+  }
+}

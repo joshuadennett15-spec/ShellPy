@@ -1,0 +1,11 @@
+scenario,threshold_km,fraction,se_pp,n_samples,median_dconv_km
+depleted_strong,8.0,0.9760,0.12,14998,32.79
+depleted_strong,15.0,0.8857,0.26,14998,32.79
+depleted,8.0,0.9177,0.27,9998,29.80
+depleted,15.0,0.8016,0.40,9998,29.80
+baseline,8.0,0.7357,0.44,10000,22.12
+baseline,15.0,0.6179,0.49,10000,22.12
+moderate,8.0,0.6526,0.48,10000,17.71
+moderate,15.0,0.5399,0.50,10000,17.71
+strong,8.0,0.5559,0.50,10000,11.65
+strong,15.0,0.4468,0.50,10000,11.65

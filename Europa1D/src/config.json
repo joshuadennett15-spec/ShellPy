@@ -1,0 +1,38 @@
+{
+    "planetary": {
+        "RADIUS": 1561000.0,
+        "MASS": 4.8e+22,
+        "GRAVITY": 1.315,
+        "ORBITAL_FREQ": 2.047e-05
+    },
+    "thermal": {
+        "CONDUCTIVITY_MODEL": "Carnahan",
+        "SURFACE_TEMP_MEAN": 104.0,
+        "MELT_TEMP": 273.0,
+        "POR_CUR_TEMP_MEAN": 150.0
+    },
+    "rheology": {
+        "CREEP_MODEL": "composite_gbs",
+        "GRAIN_SIZE": 0.001,
+        "GRAIN_WIDTH": 7.13e-10,
+        "VISCOSITY_REF": 50000000000000.0,
+        "model": "Andrade",
+        "andrade_alpha": 0.2,
+        "andrade_zeta": 1.0,
+        "GRAIN_MODE": "sampled",
+        "WATTMETER_P": 2.0
+    },
+    "heat_flux": {
+        "RADIOGENIC_FLUX": 0.0074,
+        "TIDAL_SILICATE_FLUX": 0.0035,
+        "TIDAL_STRAIN": 1e-05
+    },
+    "convection": {
+        "RA_CRIT": 1000.0,
+        "NU_PREFACTOR": 0.3446,
+        "NU_SCALING": "dv2021",
+        "FK_CORRECTION": true,
+        "FK_CORRECTION_FACTOR": 0.75,
+        "GEOMETRY_CORRECTION": 1.0
+    }
+}

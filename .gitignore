@@ -1,0 +1,15 @@
+# Python bytecode and caches
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+
+# Editor and operating-system metadata
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Virtual environments
+.venv/
+venv/
+.uv-cache/

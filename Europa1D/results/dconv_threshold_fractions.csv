@@ -1,0 +1,9 @@
+scenario,threshold_km,fraction,n_samples,median_dconv_km
+uniform_transport,8.0,0.410,500,5.39
+uniform_transport,15.0,0.322,500,5.39
+soderlund2014_equatorial_enhanced,8.0,0.306,500,4.38
+soderlund2014_equatorial_enhanced,15.0,0.210,500,4.38
+lemasquerier2023_polar_weak,8.0,0.464,500,6.82
+lemasquerier2023_polar_weak,15.0,0.362,500,6.82
+lemasquerier2023_polar_strong,8.0,0.566,500,11.44
+lemasquerier2023_polar_strong,15.0,0.442,500,11.44
