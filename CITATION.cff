@@ -1,19 +1,11 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite the accompanying thesis."
-type: software
-title: "ShellPy: a two-dimensional axisymmetric thermal model of Europa's ice shell"
+title: "ShellPy: A Monte Carlo thermal solver for icy satellite shells"
+message: "If you use this software, please cite it as below."
 authors:
   - family-names: Dennett
     given-names: Joshua
+    affiliation: "Department of Earth and Environmental Sciences, University of Manchester"
+version: 1.0.0
+date-released: 2026-05-05
 license: MIT
-year: 2026
-preferred-citation:
-  type: thesis
-  title: "Latitude-Resolved Thermal Structure of Europa's Ice Shell under the Juno MWR Constraint"
-  authors:
-    - family-names: Dennett
-      given-names: Joshua
-  institution:
-    name: "University of Manchester"
-  thesis-type: "MSc thesis"
-  year: 2026
+repository-code: "https://github.com/joshuadennett15-spec/ShellPy"
