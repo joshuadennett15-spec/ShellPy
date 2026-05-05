@@ -1,7 +1,6 @@
 # ShellPy
 
-This repository accompanies the MSc thesis *Latitude-Resolved Thermal
-Structure of Europa's Ice Shell under the Juno MWR Constraint* (Dennett,
+This repository accompanies the dissertation *xxxx* (Joshua Dennett,
 University of Manchester, 2026) and serves as its code- and
 data-availability statement. It bundles the one-dimensional radial
 thermal-shell model and the two-dimensional axisymmetric extension on
