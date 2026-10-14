@@ -28,6 +28,7 @@ Each fix is measured on the same 300-sample 1D ensemble (seed 10042).
 | 3. Priors and geometry | 293 | 37.2 | 22.3-76.1 | 100% | 4058 |
 | 4. Convection from the sampled rheology | 293 | 40.5 | 22.3-72.1 | 76% | 3637 |
 | 5. Grid-converged lid base | 275 | 38.9 | 22.1-75.6 | 74% | 5008 |
+| 6. Convergence by net drift | 280 | 39.1 | 22.0-76.1 | 75% | 5000 |
 
 1. **Run to equilibrium.** v1 stopped after 1500 steps, or at the first step with
    |dH/dt| < 1e-12 m/s; most samples were still thinning from the warm start. A column
@@ -89,6 +90,13 @@ Each fix is measured on the same 300-sample 1D ensemble (seed 10042).
    within 0.6 km. 20 samples now grow through the ocean (5 before): the grid had been holding
    some convecting shells too thin. 5 samples reach equilibrium but are flagged as not
    converged; see fix 6.
+
+6. **Convergence by net drift.** At equilibrium H flickers by a few millimetres per step
+   (|dH/dt| up to 6e-15 m/s, changing sign) because the Picard iteration stops at 0.01 K, so
+   the per-step test of fix 1 (|dH/dt| < 1e-15 m/s for 200 steps in a row) never passed for
+   5 samples that had stopped moving. A column now counts as converged when H moves less than
+   0.2 m over a block of 200 steps, the same drift bound. All 300 samples converge; samples
+   that converged before move by at most 0.12 m.
 
 ### Known problems inherited from v1 (to be fixed)
 
