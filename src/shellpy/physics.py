@@ -30,19 +30,18 @@ def melting_point(H):
     return c.MELT_TEMP + c.CLAUSIUS_CLAPEYRON * (c.ICE_DENSITY_REF * c.GRAVITY * np.asarray(H))
 
 
-def diffusion_viscosity(T, d_grain, d_del, D0v, D0b, Q_v, Q_b):
-    """Diffusion-creep viscosity (Pa s): volume plus grain-boundary diffusion (Howell 2021)."""
+def diffusion_viscosity(T, p):
+    """Diffusion-creep viscosity (Pa s): volume plus grain-boundary diffusion (Howell 2021).
+
+    p holds the sampled rheology: d_grain, d_del, D0v, D0b, Q_v, Q_b.
+    """
     R = c.GAS_CONSTANT
     T = np.asarray(T)
-    Dv = D0v * np.exp(-Q_v / (R * T))
-    Db = D0b * np.exp(-Q_b / (R * T))
-    rate = (42 * c.MOLAR_VOLUME) / (R * T * d_grain**2) * (Dv + (np.pi * d_del / d_grain) * Db)
+    Dv = p['D0v'] * np.exp(-p['Q_v'] / (R * T))
+    Db = p['D0b'] * np.exp(-p['Q_b'] / (R * T))
+    d = p['d_grain']
+    rate = (42 * c.MOLAR_VOLUME) / (R * T * d**2) * (Dv + (np.pi * p['d_del'] / d) * Db)
     return np.clip(0.5 / rate, 1e12, 1e25)
-
-
-def fk_viscosity(T, T_melt):
-    """Frank-Kamenetskii viscosity (Pa s) anchored at VISCOSITY_REF at the melting point."""
-    return c.VISCOSITY_REF * np.exp((c.Q_FK / c.GAS_CONSTANT) * (1 / np.asarray(T) - 1 / T_melt))
 
 
 def andrade_heating(eta, epsilon_0, mu_ice):

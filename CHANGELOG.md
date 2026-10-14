@@ -26,6 +26,7 @@ Each fix is measured on the same 300-sample 1D ensemble (seed 10042).
 | 1. Run to equilibrium | 298 | 20.6 | 17.3-23.9 | 72% | 3890 |
 | 2. Energy-conserving base | 295 | 40.2 | 22.1-78.3 | 100% | 3471 |
 | 3. Priors and geometry | 293 | 37.2 | 22.3-76.1 | 100% | 4058 |
+| 4. Convection from the sampled rheology | 293 | 40.5 | 22.3-72.1 | 76% | 3637 |
 
 1. **Run to equilibrium.** v1 stopped after 1500 steps, or at the first step with
    |dH/dt| < 1e-12 m/s; most samples were still thinning from the warm start. A column
@@ -43,7 +44,7 @@ Each fix is measured on the same 300-sample 1D ensemble (seed 10042).
    conductive shell and a thicker convecting one (Mitri & Showman 2005). Which one a run
    reaches depends on where it starts; the v1 warm start begins thick (up to 100 km), so
    every sample above lands on the convecting branch and 4 grow through the ocean. Branch
-   selection is open problem 4 below.
+   selection is listed under known problems below.
 
 3. **Priors and geometry.** The basal heat flux is now the sum of the two sampled fluxes,
    q_radiogenic ~ N(7, 1) truncated to 4-12 mW/m^2 and q_tidal_silicate ~ LogUniform(2, 20)
@@ -58,8 +59,19 @@ Each fix is measured on the same 300-sample 1D ensemble (seed 10042).
    apart from resampling. 2D: the 1.2x tidal flux factor is now an explicit
    `solve_2d(q_tidal_scale=1.2)` argument instead of being baked into the sample.
 
+4. **Convection from the sampled rheology.** v1 computed Ra and Nu from a fixed
+   Frank-Kamenetskii viscosity (5e13 Pa s at the melting point, Q = 59.4 kJ/mol), so the
+   sampled grain size, diffusivities and activation energies set the tidal heating but never
+   the convection. Ra now uses the sampled diffusion-creep viscosity at the sublayer's mean
+   temperature, and the viscosity contrast gamma is ln(eta(T_c) / eta(T_melt)) of the same
+   law. The 0.75 factor on Nu, which is not in DV2021, is removed. Grain size now matters:
+   the rank correlation of thickness with grain size goes from -0.03 to -0.35. Shells with
+   coarse grains (median 1.3 mm) stay conductive and thin; the convecting ones have a median
+   grain size of 0.46 mm. gamma is 3.1-3.3 across the convecting samples, below the range
+   DV2021 calibrated their law on, so the Nu law itself still needs checking against the paper.
+
 ### Known problems inherited from v1 (to be fixed)
 
-4. Convection onset is discontinuous and the equilibrium depends on the starting state.
-5. Grain size and the sampled activation energy never reach Ra or Nu.
-6. 1D and 2D priors differ (tidal strain, a 1.2x tidal flux factor in 2D).
+- Convection onset is discontinuous and the equilibrium depends on the starting state.
+- 1D and 2D priors differ (tidal strain, a 1.2x tidal flux factor in 2D).
+- The DV2021 Nusselt law is applied at gamma ~ 3, outside its calibrated range.

@@ -32,7 +32,7 @@ class ThermalSolver:
         """Conductivity (with convection), density, heat capacity, tidal heating and convection state."""
         p = self.p
         k, state = convection.conductivity_profile(T, self.xi * self.H, self.H, physics.melting_point(self.H), p)
-        eta = physics.diffusion_viscosity(T, p['d_grain'], p['d_del'], p['D0v'], p['D0b'], p['Q_v'], p['Q_b'])
+        eta = physics.diffusion_viscosity(T, p)
         q_tidal = physics.andrade_heating(eta, p['epsilon_0'], p['mu_ice'])
         return k, physics.density(T), physics.specific_heat(T), q_tidal, state
 

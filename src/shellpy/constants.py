@@ -21,8 +21,6 @@ POROSITY_CURE_TEMP = 150.0           # K, ice warmer than this has lost its poro
 # Rheology
 GAS_CONSTANT = 8.314                 # J/(mol K)
 MOLAR_VOLUME = 1.97e-5               # m^3/mol
-VISCOSITY_REF = 5e13                 # Pa s, viscosity at the melting point (Green et al. 2021)
-Q_FK = 59.4e3                        # J/mol, activation energy of the Frank-Kamenetskii viscosity
 ANDRADE_ALPHA = 0.2                  # Andrade transient-creep exponent
 ANDRADE_ZETA = 1.0                   # Andrade-to-Maxwell timescale ratio
 
@@ -31,4 +29,3 @@ RA_CRIT = 1000.0                     # critical Rayleigh number for onset
 C1_DESCHAMPS = 1.43                  # DV2021 Eq. 18
 C2_DESCHAMPS = -0.03                 # DV2021 Eq. 18
 THETA_LID = 2.24                     # lid-base temperature drop in units of the viscous temperature scale
-FK_CORRECTION = 0.75                 # empirical factor on the DV2021 surface flux; not in DV2021

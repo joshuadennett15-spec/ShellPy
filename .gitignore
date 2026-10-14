@@ -13,3 +13,6 @@ Thumbs.db
 .venv/
 venv/
 .uv-cache/
+
+# Build metadata from pip install -e
+*.egg-info/

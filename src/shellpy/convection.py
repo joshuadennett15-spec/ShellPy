@@ -38,29 +38,31 @@ def lid_temperatures(T_melt, T_surf, Q_v):
     return float(np.clip(T_c, T_surf + 1.0, T_melt - 1.0)), Ti
 
 
-def rayleigh_nusselt(T_c, T_melt, D_conv, Q_v):
+def rayleigh_nusselt(T_c, T_melt, D_conv, p):
     """Rayleigh number of the sublayer and its Nusselt number from DV2021 Eq. 23.
 
-    Ra uses the Frank-Kamenetskii viscosity at the sublayer's mean temperature.
-    Nu is DV2021's surface heat flux Phi_top with no internal heating, for which
-    their Eq. 21 gives the interior temperature 1 - 1.23/gamma in closed form.
+    Both use the sampled diffusion-creep viscosity (grain size, diffusivities, activation
+    energies in p): Ra at the sublayer's mean temperature, and the viscosity contrast
+    gamma = ln(eta(T_c) / eta(T_melt)) across it. Nu is DV2021's surface heat flux
+    Phi_top with no internal heating, for which their Eq. 21 gives the interior
+    temperature 1 - 1.23/gamma in closed form.
     """
     DT = T_melt - T_c
     T_mean = (T_melt + T_c) / 2
     rho = physics.density(T_mean)
     kappa = physics.conductivity(T_mean) / (rho * physics.specific_heat(T_mean))
     buoyancy = rho * c.GRAVITY * c.THERMAL_EXPANSION * DT * D_conv**3
-    Ra = buoyancy / (kappa * physics.fk_viscosity(T_mean, T_melt))
-    Ra_surf = buoyancy / (kappa * physics.fk_viscosity(T_c, T_melt))
-    gamma = max(Q_v / c.GAS_CONSTANT * (1.0 / T_c - 1.0 / T_melt), 1.0)   # ln of the viscosity contrast
-    Ra_eff = Ra_surf * np.exp(gamma * (1.0 - 1.23 / gamma))
-    Nu = max(1.46 * Ra_eff**0.27 / gamma**1.21 * c.FK_CORRECTION, 1.0)
+    eta_mean, eta_top, eta_base = physics.diffusion_viscosity(np.array([T_mean, T_c, T_melt]), p)
+    Ra = buoyancy / (kappa * eta_mean)
+    gamma = max(np.log(eta_top / eta_base), 1.0)
+    Ra_eff = buoyancy / (kappa * eta_top) * np.exp(gamma * (1.0 - 1.23 / gamma))
+    Nu = max(1.46 * Ra_eff**0.27 / gamma**1.21, 1.0)
     return float(Ra), float(Nu)
 
 
-def convection_state(T, z, H, T_melt, Q_v):
+def convection_state(T, z, H, T_melt, p):
     """Locate the lid base in the temperature profile T at depths z and characterise the sublayer."""
-    T_c, Ti = lid_temperatures(T_melt, float(T[0]), Q_v)
+    T_c, Ti = lid_temperatures(T_melt, float(T[0]), p['Q_v'])
     warm = np.flatnonzero(T >= T_c)
     if warm.size == 0:
         return ConvectionState(len(T) - 1, H, 0.0, T_c, Ti, 0.0, 1.0, False)
@@ -72,18 +74,18 @@ def convection_state(T, z, H, T_melt, Q_v):
     D_conv = H - D_cond
     if D_conv <= 0:
         return ConvectionState(i, D_cond, 0.0, T_c, Ti, 0.0, 1.0, False)
-    Ra, Nu = rayleigh_nusselt(T_c, T_melt, D_conv, Q_v)
+    Ra, Nu = rayleigh_nusselt(T_c, T_melt, D_conv, p)
     return ConvectionState(i, D_cond, D_conv, T_c, Ti, Ra, Nu, Ra >= c.RA_CRIT)
 
 
 def conductivity_profile(T, z, H, T_melt, p):
     """Effective conductivity at each node, with porosity and convective enhancement.
 
-    p holds the sampled shell parameters (uses Q_v and f_porosity). Returns (k, ConvectionState).
+    p holds the sampled shell parameters (rheology and f_porosity). Returns (k, ConvectionState).
     """
     k = physics.conductivity(T)
     k = np.where(T < c.POROSITY_CURE_TEMP, k * (1 - p['f_porosity']), k)
-    state = convection_state(T, z, H, T_melt, p['Q_v'])
+    state = convection_state(T, z, H, T_melt, p)
     if state.is_convecting:
         k[state.idx_c:] *= state.Nu
     return k, state
