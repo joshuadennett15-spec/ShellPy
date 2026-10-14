@@ -26,18 +26,24 @@ from shellpy.sampling import sample_parameters
 from shellpy.monte_carlo import solve_1d, run_ensemble
 
 p = sample_parameters(np.random.default_rng(0))   # one draw from the priors
-print(solve_1d(p))                                 # thickness, lid, Ra, Nu, ...
+print(solve_1d(p, start='thin'))                   # thickness, lid, Ra, Nu, ...
 
 if __name__ == "__main__":                         # ensembles run in parallel processes
-    table = run_ensemble(1000, seed=10042)         # one row per sample: inputs, outputs, status
-    np.savez("ensemble.npz", **table)
+    for start in ('thin', 'thick'):                # one table per branch, same inputs
+        table = run_ensemble(1000, seed=10042, start=start)   # one row per sample: inputs, outputs, status
+        np.savez(f"ensemble_{start}.npz", **table)
+```
+
+Many parameter sets have two equilibria: a conductive shell reached by growing from thin,
+and a thicker convecting shell reached by thinning from thick. Every solve takes
+`start='thin'` or `start='thick'`, so run both and compare them row by row.
 ```
 
 Latitude-resolved runs use `shellpy.latitude`:
 
 ```python
 from shellpy.latitude import sample_2d, solve_2d
-table = run_ensemble(500, seed=42, sample=sample_2d, solve=solve_2d, scenario="lemasquerier2023_polar")
+table = run_ensemble(500, seed=42, sample=sample_2d, solve=solve_2d, scenario="lemasquerier2023_polar", start="thin")
 ```
 
 ## Layout

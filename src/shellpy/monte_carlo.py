@@ -17,8 +17,18 @@ def basal_heat_flux(p):
     return p['q_radiogenic'] + p['q_tidal_silicate']
 
 
-def warm_start(p, q_basal):
-    """Starting thickness: the conductive estimate times 8 for convection, clipped to 5-100 km."""
+def warm_start(p, q_basal, start):
+    """Starting thickness (m) for start = 'thin' or 'thick'.
+
+    Many parameter sets have two equilibria, a thinner conductive shell and a thicker
+    convecting one, and which one a column reaches depends on where it starts.
+    'thin' is 5 km, a shell growing from thin; 'thick' is the conductive estimate
+    times 8, clipped to 5-100 km, a shell thinning from thick.
+    """
+    if start == 'thin':
+        return 5e3
+    if start != 'thick':
+        raise ValueError(f"start must be 'thin' or 'thick', got {start!r}")
     k = physics.conductivity((p['T_surf'] + c.MELT_TEMP) / 2)
     return float(np.clip(k * (c.MELT_TEMP - p['T_surf']) / q_basal * 8.0, 5e3, 100e3))
 
@@ -40,12 +50,13 @@ def column_outputs(solver):
     return out
 
 
-def solve_1d(p, **solver_kw):
-    """Equilibrium of one parameter set: outputs plus a 'status' ('ok' or why it was rejected)."""
+def solve_1d(p, *, start, **solver_kw):
+    """Equilibrium of one parameter set reached from start ('thin' or 'thick', see warm_start):
+    outputs plus a 'status' ('ok' or why it was rejected)."""
     q = basal_heat_flux(p)
     if not q > 0:
         raise ValueError(f"basal heat flux must be positive, got {q}")
-    out = column_outputs(run_column(p, q, warm_start(p, q), **solver_kw))
+    out = column_outputs(run_column(p, q, warm_start(p, q, start), **solver_kw))
     H = out['H_km']
     if not out['converged']:
         out['status'] = 'not converged'

@@ -19,6 +19,6 @@ def test_forcing_hits_equator_and_pole_anchors():
 
 
 def test_small_2d_run():
-    out = solve_2d(sample_2d(4, seed=1), scenario='lemasquerier2023_polar', n_lat=3)
+    out = solve_2d(sample_2d(4, seed=1), scenario='lemasquerier2023_polar', start='thin', n_lat=3)
     assert out['status'] == 'ok'
     assert out['H_km'].shape == (3,) and np.all(out['converged'])

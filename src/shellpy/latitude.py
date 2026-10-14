@@ -6,8 +6,8 @@ ShellPy v1 it changed the equilibrium thickness by under 0.1 km.
 """
 import numpy as np
 
-from shellpy import physics, sampling
-from shellpy.monte_carlo import column_outputs, run_column
+from shellpy import sampling
+from shellpy.monte_carlo import column_outputs, run_column, warm_start
 
 # Ocean heat-flux scenarios: (pattern, q*), with q* the Lemasquerier et al. (2023) contrast parameter
 SCENARIOS = {
@@ -61,8 +61,9 @@ def sample_2d(i, seed):
     return sample_latitude_parameters(np.random.SeedSequence([seed, i]))
 
 
-def solve_2d(inputs, *, scenario, n_lat=37, q_tidal_scale=1.2, **solver_kw):
-    """Equilibrium thickness at n_lat latitudes. Outputs are arrays over latitude, plus 'status'.
+def solve_2d(inputs, *, scenario, start, n_lat=37, q_tidal_scale=1.2, **solver_kw):
+    """Equilibrium thickness at n_lat latitudes, each column reached from start ('thin' or
+    'thick', see warm_start). Outputs are arrays over latitude, plus 'status'.
 
     q_tidal_scale multiplies the silicate tidal part of the basal flux (1.2 in the thesis runs).
     """
@@ -71,9 +72,9 @@ def solve_2d(inputs, *, scenario, n_lat=37, q_tidal_scale=1.2, **solver_kw):
     eps = tidal_strain(phi, inputs['epsilon_eq'], inputs['epsilon_pole'])
     q_mean = inputs['q_radiogenic'] + q_tidal_scale * inputs['q_tidal_silicate']
     q = ocean_heat_flux(phi, q_mean, scenario)
-    H0 = float(np.clip(physics.conductivity(190.0) * 170.0 / q_mean * 1.5, 5e3, 80e3))
-    rows = [column_outputs(run_column({**inputs, 'T_surf': T_s[j], 'epsilon_0': eps[j]}, q[j], H0, **solver_kw))
-            for j in range(n_lat)]
+    columns = [{**inputs, 'T_surf': T_s[j], 'epsilon_0': eps[j]} for j in range(n_lat)]
+    rows = [column_outputs(run_column(p, q[j], warm_start(p, q[j], start), **solver_kw))
+            for j, p in enumerate(columns)]
     out: dict = {k: np.array([r[k] for r in rows]) for k in rows[0]}
     out['latitude_deg'] = np.degrees(phi)
     H = out['H_km']

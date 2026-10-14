@@ -29,6 +29,8 @@ Each fix is measured on the same 300-sample 1D ensemble (seed 10042).
 | 4. Convection from the sampled rheology | 293 | 40.5 | 22.3-72.1 | 76% | 3637 |
 | 5. Grid-converged lid base | 275 | 38.9 | 22.1-75.6 | 74% | 5008 |
 | 6. Convergence by net drift | 280 | 39.1 | 22.0-76.1 | 75% | 5000 |
+| 7. Both branches: thin start | 280 | 32.8 | 21.0-60.3 | 33% | 3900 |
+| 7. Both branches: thick start | 280 | 39.1 | 22.0-76.1 | 75% | 5000 |
 
 1. **Run to equilibrium.** v1 stopped after 1500 steps, or at the first step with
    |dH/dt| < 1e-12 m/s; most samples were still thinning from the warm start. A column
@@ -98,8 +100,17 @@ Each fix is measured on the same 300-sample 1D ensemble (seed 10042).
    0.2 m over a block of 200 steps, the same drift bound. All 300 samples converge; samples
    that converged before move by at most 0.12 m.
 
+7. **Both branches.** Every solve now takes `start='thin'` (5 km, a shell growing from thin)
+   or `start='thick'` (the old warm start: the conductive estimate times 8, clipped to
+   5-100 km), and the two are run as separate ensembles with the same inputs. 2D columns use
+   the same rule, replacing a 2D-only start (x1.5, clipped to 80 km). Of the 280 samples that
+   are ok from both starts, 163 reach the same equilibrium (within 0.2 km), and 117 (42%)
+   have two: conductive from the thin start and convecting from the thick one, a median
+   6.6 km thicker (16-84%: 0.3-25.5 km, at most 69 km). No sample convects from the thin start
+   and conducts from the thick one. Every row so far used the thick start, so rows 1-6 and
+   the thick row describe the convecting branch.
+
 ### Known problems inherited from v1 (to be fixed)
 
-- Convection onset is discontinuous and the equilibrium depends on the starting state.
 - 1D and 2D priors differ (tidal strain, a 1.2x tidal flux factor in 2D).
 - The DV2021 Nusselt law is applied at gamma ~ 3, outside its calibrated range.
