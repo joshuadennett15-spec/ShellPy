@@ -1,0 +1,102 @@
+"""Equilibrium shell thickness for one parameter set, and Monte Carlo ensembles of them."""
+import multiprocessing as mp
+import os
+from collections import Counter
+from functools import partial
+
+import numpy as np
+from scipy.stats import gaussian_kde
+
+from shellpy import constants as c
+from shellpy import physics, sampling
+from shellpy.solver import ThermalSolver
+
+
+def basal_heat_flux(p):
+    """Ocean-to-ice heat flux (W/m^2): rocky-interior radiogenic plus silicate tidal heating."""
+    M_rock = (4.0 / 3.0) * np.pi * ((c.RADIUS - p['D_H2O']) ** 3) * c.SILICATE_DENSITY
+    return (p['H_rad'] * M_rock) / c.AREA + p['P_tidal'] / c.AREA
+
+
+def warm_start(p, q_basal):
+    """Starting thickness: the conductive estimate times 8 for convection, clipped to 5-100 km."""
+    k = physics.conductivity((p['T_surf'] + c.MELT_TEMP) / 2)
+    return float(np.clip(k * (c.MELT_TEMP - p['T_surf']) / q_basal * 8.0, 5e3, 100e3))
+
+
+def run_column(p, q_ocean, H0, *, nx=31, dt=1e12, max_steps=1500, tol=1e-12):
+    """Step one column until |dH/dt| < tol (m/s) or max_steps; returns the solver."""
+    solver = ThermalSolver(p, H0, nx=nx, dt=dt)
+    for _ in range(max_steps):
+        if abs(solver.step(q_ocean)) < tol:
+            break
+    return solver
+
+
+def column_outputs(solver):
+    """Thickness and convection diagnostics of a finished column (km for lengths)."""
+    s, H_km = solver.state, solver.H / 1e3
+    out = {'H_km': H_km, 'D_cond_km': s.D_cond / 1e3, 'D_conv_km': s.D_conv / 1e3, 'Ra': s.Ra, 'Nu': s.Nu,
+           'T_c': s.T_c, 'Ti': s.Ti, 'steps': solver.steps}
+    if s.D_conv > 0 and s.Ra < c.RA_CRIT:   # warm but subcritical sublayer: the whole shell conducts
+        out.update(D_cond_km=H_km, D_conv_km=0.0, Nu=1.0)
+    return out
+
+
+def solve_1d(p, **solver_kw):
+    """Equilibrium of one parameter set: outputs plus a 'status' ('ok' or why it was rejected)."""
+    q = basal_heat_flux(p)
+    if not q > 0:
+        raise ValueError(f"basal heat flux must be positive, got {q}")
+    out = column_outputs(run_column(p, q, warm_start(p, q), **solver_kw))
+    H = out['H_km']
+    out['status'] = 'ok' if 0.5 < H < p['D_H2O'] / 1e3 * 0.99 and H <= 200.0 else 'rejected: thickness'
+    return out
+
+
+def sample_1d(i, seed):
+    """Inputs of sample i of a 1D ensemble."""
+    return sampling.sample_parameters(np.random.default_rng(seed + i))
+
+
+def _run_one(i, seed, sample, solve, solve_kw):
+    inputs = sample(i, seed)
+    try:
+        return inputs, solve(inputs, **solve_kw)
+    except Exception as e:   # recorded per sample and counted by run_ensemble
+        return inputs, {'status': f'error: {type(e).__name__}: {e}'}
+
+
+def run_ensemble(n, seed, *, sample=sample_1d, solve=solve_1d, workers=None, **solve_kw):
+    """Run n samples in parallel: inputs = sample(i, seed), outputs = solve(inputs, **solve_kw).
+
+    Returns a dict of arrays with one row per sample: every input, every output
+    and 'status'. Outputs of rows whose status is not 'ok' are NaN.
+    """
+    workers = workers or max(1, (os.cpu_count() or 2) - 1)
+    job = partial(_run_one, seed=seed, sample=sample, solve=solve, solve_kw=solve_kw)
+    with mp.Pool(workers) as pool:
+        rows = pool.map(job, range(n), chunksize=max(1, n // (workers * 4)))
+    inputs, outs = zip(*rows)
+    table = {k: np.array([x[k] for x in inputs]) for k in inputs[0]}
+    statuses = Counter(o['status'] for o in outs)
+    for status, count in statuses.items():
+        if status != 'ok':
+            print(f"{count}/{n} samples: {status}")
+    template = next((o for o in outs if o['status'] == 'ok'), None)
+    if template is None:
+        raise RuntimeError(f"no sample succeeded: {dict(statuses)}")
+    for k, v in template.items():
+        if k != 'status':
+            nan = np.full(np.shape(v), np.nan)
+            table[k] = np.array([o[k] if o['status'] == 'ok' else nan for o in outs])
+    table['status'] = np.array([o['status'] for o in outs])
+    return table
+
+
+def summarize(H):
+    """Most likely value (KDE mode), median, mean and 1-sigma percentiles of thicknesses H."""
+    H = np.asarray(H)
+    grid = np.linspace(H.min(), H.max(), 300)
+    return {'mode': float(grid[np.argmax(gaussian_kde(H)(grid))]), 'median': float(np.median(H)),
+            'mean': float(np.mean(H)), 'p16': float(np.percentile(H, 15.87)), 'p84': float(np.percentile(H, 84.13))}
