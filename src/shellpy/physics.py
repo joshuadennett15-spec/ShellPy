@@ -60,11 +60,10 @@ def andrade_heating(eta, epsilon_0, mu_ice):
     return 0.5 * w * epsilon_0**2 * (J_imag / (J_real**2 + J_imag**2))
 
 
-def stefan_velocity(T, dz, q_ocean, k_basal):
-    """Freezing-front velocity (m/s, positive = freezing) from the basal heat balance.
+def stefan_velocity(q_ice, q_ocean, T_base):
+    """Freezing-front velocity (m/s, positive = freezing): (q_ice - q_ocean) / (rho L).
 
-    The flux conducted up into the ice (second-order one-sided gradient) minus
-    the ocean heat flux q_ocean, divided by rho * L.
+    q_ice is the heat flux conducted up into the ice at its base, q_ocean the flux
+    the ocean delivers (both W/m^2).
     """
-    dT_dz = (3 * T[-1] - 4 * T[-2] + T[-3]) / (2 * dz)
-    return (k_basal * dT_dz - q_ocean) / (density(T[-1]) * c.LATENT_HEAT)
+    return (q_ice - q_ocean) / (density(T_base) * c.LATENT_HEAT)

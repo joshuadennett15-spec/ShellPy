@@ -59,7 +59,7 @@ class ThermalSolver:
         explicit = self._explicit_flux(T_old, theta, dt) if theta < 1 else 0.0
         T = T_old
         for _ in range(3):   # Picard iterations on the temperature-dependent coefficients
-            T_new = self._solve_linear(T, T_old, theta, dt, explicit)
+            T_new, q_ice = self._solve_linear(T, T_old, theta, dt, explicit)
             converged = np.max(np.abs(T_new - T)) < 0.01
             T = T_new
             if converged:
@@ -67,28 +67,34 @@ class ThermalSolver:
         if not np.all(np.isfinite(T)):
             raise FloatingPointError(f"non-finite temperature at step {self.steps}, H = {self.H:.0f} m")
         self.T = T
-        v = physics.stefan_velocity(T, self.H / (self.nx - 1), q_ocean, physics.conductivity(T[-1]))
+        v = physics.stefan_velocity(q_ice, q_ocean, T[-1])
         self.H = max(self.H + v * dt, 500.0)
         return v
 
     def _face_factors(self, k):
-        """Conductance between node i and its lower (fp) and upper (fm) neighbour, interior nodes."""
+        """Conductances for interior nodes to their lower (fp) and upper (fm) neighbours, and the
+        bottom face's conductivity scaled to the base area."""
         dz2 = (self.H / (self.nx - 1)) ** 2
         G = (c.RADIUS - self.xi * self.H) ** 2 if self.spherical else np.ones(self.nx)   # area factor r^2
         kG = convection.face_conductivity(k) * ((G[:-1] + G[1:]) / 2)
-        return kG[1:] / (G[1:-1] * dz2), kG[:-1] / (G[1:-1] * dz2)
+        return kG[1:] / (G[1:-1] * dz2), kG[:-1] / (G[1:-1] * dz2), kG[-1] / G[-1]
 
     def _explicit_flux(self, T_old, theta, dt):
         """Explicit (1 - theta) part of the Crank-Nicolson diffusion term, with coefficients at T_old."""
         k, rho, cp, _, _ = self.properties(T_old)
-        fp, fm = self._face_factors(k)
+        fp, fm, _ = self._face_factors(k)
         a = dt / (rho[1:-1] * cp[1:-1])
         return (1 - theta) * a * (fp * (T_old[2:] - T_old[1:-1]) - fm * (T_old[1:-1] - T_old[:-2]))
 
     def _solve_linear(self, T_coeff, T_old, theta, dt, explicit):
-        """One implicit solve with coefficients evaluated at T_coeff."""
+        """One implicit solve with coefficients evaluated at T_coeff.
+
+        Returns the new temperatures and the heat flux conducted into the ice at its base:
+        the flux through the bottom cell face (Nu-enhanced where convecting) minus the tidal
+        heat generated in the bottom half cell, so the shell's energy budget closes.
+        """
         k, rho, cp, q_tidal, self.state = self.properties(T_coeff)
-        fp, fm = self._face_factors(k)
+        fp, fm, k_base = self._face_factors(k)
         a = dt / (rho[1:-1] * cp[1:-1])
         ab = np.zeros((3, self.nx))                           # banded matrix: upper, main, lower diagonals
         ab[0, 2:] = -theta * a * fp
@@ -99,4 +105,6 @@ class ThermalSolver:
         rhs[0] = self.p['T_surf']
         rhs[1:-1] = T_old[1:-1] + explicit + dt * q_tidal[1:-1] / (rho[1:-1] * cp[1:-1])
         rhs[-1] = physics.melting_point(self.H)
-        return solve_banded((1, 1), ab, rhs)
+        T = solve_banded((1, 1), ab, rhs)
+        dz = self.H / (self.nx - 1)
+        return T, k_base * (T[-1] - T[-2]) / dz - q_tidal[-1] * dz / 2

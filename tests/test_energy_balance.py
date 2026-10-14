@@ -13,9 +13,7 @@ from cases import CONDUCTIVE, CONVECTING
 def surface_to_supplied_ratio(p):
     q_ocean = basal_heat_flux(p)
     s = ThermalSolver(p, 25e3, spherical=False)
-    for _ in range(8000):
-        s.step(q_ocean)
-    assert abs(s.step(q_ocean)) < 1e-15, "did not reach equilibrium"
+    assert s.run(q_ocean), "did not reach equilibrium"
     k, _, _, q_tidal, state = s.properties(s.T)
     dz = s.H / (s.nx - 1)
     q_surface = face_conductivity(k)[0] * (s.T[1] - s.T[0]) / dz
@@ -25,11 +23,10 @@ def surface_to_supplied_ratio(p):
 def test_conductive_shell_conserves_energy():
     ratio, state = surface_to_supplied_ratio(CONDUCTIVE)
     assert not state.is_convecting
-    assert ratio == pytest.approx(1.0, abs=0.03)
+    assert ratio == pytest.approx(1.0, abs=0.005)
 
 
-@pytest.mark.xfail(strict=True, reason="known bug: the Stefan condition uses plain k, not the Nu-enhanced k")
 def test_convecting_shell_conserves_energy():
     ratio, state = surface_to_supplied_ratio(CONVECTING)
     assert state.is_convecting
-    assert ratio == pytest.approx(1.0, abs=0.03)
+    assert ratio == pytest.approx(1.0, abs=0.005)

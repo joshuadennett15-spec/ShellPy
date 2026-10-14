@@ -24,6 +24,7 @@ Each fix is measured on the same 300-sample 1D ensemble (seed 10042).
 |---|---|---|---|---|---|
 | v1.0.1 behaviour | 300 | 32.5 | 17.5-54.1 | 80% | 1500 |
 | 1. Run to equilibrium | 298 | 20.6 | 17.3-23.9 | 72% | 3890 |
+| 2. Energy-conserving base | 295 | 40.2 | 22.1-78.3 | 100% | 3471 |
 
 1. **Run to equilibrium.** v1 stopped after 1500 steps, or at the first step with
    |dH/dt| < 1e-12 m/s; most samples were still thinning from the warm start. A column
@@ -32,10 +33,19 @@ Each fix is measured on the same 300-sample 1D ensemble (seed 10042).
    (median 32.5 km, 84th percentile 54 km) was an artefact of stopping early. 2D columns now
    converge independently instead of stepping until the slowest one stops.
 
+2. **Energy-conserving base.** v1's Stefan condition multiplied plain k by a basal gradient
+   that Nu had flattened, so a convecting shell lost 1.2-3x more heat at its surface than
+   the ocean and tides supplied (2.85x in the test shell). The flux into the ice is now the
+   flux carried through the bottom cell face, Nu-enhanced where convecting, minus the tidal
+   heat of the bottom half cell; surface loss matches supply to 1e-4. Correct energy makes
+   convecting shells thicker, and exposes two equilibria for many parameter sets: a thinner
+   conductive shell and a thicker convecting one (Mitri & Showman 2005). Which one a run
+   reaches depends on where it starts; the v1 warm start begins thick (up to 100 km), so
+   every sample above lands on the convecting branch and 4 grow through the ocean. Branch
+   selection is open problem 3 below.
+
 ### Known problems inherited from v1 (to be fixed)
 
-2. Convecting shells do not conserve energy: the Stefan condition uses plain k against a
-   gradient flattened by Nu, so the surface loses 1.2-3x the heat supplied.
 3. Convection onset is discontinuous and the equilibrium depends on the starting state.
 4. Grain size and the sampled activation energy never reach Ra or Nu.
 5. The sampled radiogenic flux q_rad is discarded and recomputed from H_rad.
