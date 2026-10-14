@@ -24,6 +24,7 @@ class ThermalSolver:
         self.spherical = H0 >= 30e3 if spherical is None else spherical
         self.rannacher_steps = rannacher_steps
         self.steps = 0
+        self.converged = False
         self.xi = np.linspace(0, 1, nx)                       # normalised depth
         self.T = np.linspace(p['T_surf'], physics.melting_point(H0), nx)
         self.state = None                                     # ConvectionState of the latest solve
@@ -35,6 +36,14 @@ class ThermalSolver:
         eta = physics.diffusion_viscosity(T, p['d_grain'], p['d_del'], p['D0v'], p['D0b'], p['Q_v'], p['Q_b'])
         q_tidal = physics.andrade_heating(eta, p['epsilon_0'], p['mu_ice'])
         return k, physics.density(T), physics.specific_heat(T), q_tidal, state
+
+    def run(self, q_ocean, max_steps=50_000, tol=1e-15, window=200):
+        """Step until |dH/dt| < tol (m/s) for `window` consecutive steps; returns self.converged."""
+        calm = 0
+        while self.steps < max_steps and calm < window:
+            calm = calm + 1 if abs(self.step(q_ocean)) < tol else 0
+        self.converged = calm >= window
+        return self.converged
 
     def step(self, q_ocean):
         """Advance one time step; returns the freezing-front velocity (m/s)."""

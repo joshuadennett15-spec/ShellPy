@@ -16,10 +16,24 @@
   equilibrium thickness by at most 72 m in v1). 2D now uses the same Nusselt law as 1D;
   the v1 thesis 2D runs used the Green et al. (2021) law.
 
+### Science fixes
+
+Each fix is measured on the same 300-sample 1D ensemble (seed 10042).
+
+| Change | ok | Median H (km) | 16-84% (km) | Convecting | Median steps |
+|---|---|---|---|---|---|
+| v1.0.1 behaviour | 300 | 32.5 | 17.5-54.1 | 80% | 1500 |
+| 1. Run to equilibrium | 298 | 20.6 | 17.3-23.9 | 72% | 3890 |
+
+1. **Run to equilibrium.** v1 stopped after 1500 steps, or at the first step with
+   |dH/dt| < 1e-12 m/s; most samples were still thinning from the warm start. A column
+   now counts as converged when |dH/dt| < 1e-15 m/s for 200 consecutive steps (under 0.2 m
+   of drift), within 50,000 steps, and every result records `converged`. The v1 upper tail
+   (median 32.5 km, 84th percentile 54 km) was an artefact of stopping early. 2D columns now
+   converge independently instead of stepping until the slowest one stops.
+
 ### Known problems inherited from v1 (to be fixed)
 
-1. Runs stop after 1500 steps or the first step with |dH/dt| < 1e-12 m/s, usually before
-   equilibrium; v1 ensembles are biased by up to tens of km.
 2. Convecting shells do not conserve energy: the Stefan condition uses plain k against a
    gradient flattened by Nu, so the surface loses 1.2-3x the heat supplied.
 3. Convection onset is discontinuous and the equilibrium depends on the starting state.

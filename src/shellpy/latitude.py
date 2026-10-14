@@ -8,8 +8,7 @@ import numpy as np
 
 from shellpy import constants as c
 from shellpy import physics, sampling
-from shellpy.monte_carlo import column_outputs
-from shellpy.solver import ThermalSolver
+from shellpy.monte_carlo import column_outputs, run_column
 
 # Ocean heat-flux scenarios: (pattern, q*), with q* the Lemasquerier et al. (2023) contrast parameter
 SCENARIOS = {
@@ -69,19 +68,15 @@ def sample_2d(i, seed, q_tidal_scale=1.2):
     return sample_latitude_parameters(np.random.SeedSequence([seed, i]), q_tidal_scale)
 
 
-def solve_2d(inputs, *, scenario, n_lat=37, nx=31, dt=1e12, max_steps=1500, tol=1e-12):
+def solve_2d(inputs, *, scenario, n_lat=37, **solver_kw):
     """Equilibrium thickness at n_lat latitudes. Outputs are arrays over latitude, plus 'status'."""
     phi = np.linspace(0, np.pi / 2, n_lat)
     T_s = surface_temperature(phi, inputs['T_eq'], inputs['T_floor'])
     eps = tidal_strain(phi, inputs['epsilon_eq'], inputs['epsilon_pole'])
     q = ocean_heat_flux(phi, inputs['q_ocean_mean'], scenario)
     H0 = float(np.clip(physics.conductivity(190.0) * 170.0 / inputs['q_ocean_mean'] * 1.5, 5e3, 80e3))
-    solvers = [ThermalSolver({**inputs, 'T_surf': T_s[j], 'epsilon_0': eps[j]}, H0, nx=nx, dt=dt)
-               for j in range(n_lat)]
-    for _ in range(max_steps):   # all columns step together until the slowest has stopped moving
-        if max([abs(s.step(q[j])) for j, s in enumerate(solvers)]) < tol:
-            break
-    rows = [column_outputs(s) for s in solvers]
+    rows = [column_outputs(run_column({**inputs, 'T_surf': T_s[j], 'epsilon_0': eps[j]}, q[j], H0, **solver_kw))
+            for j in range(n_lat)]
     out: dict = {k: np.array([r[k] for r in rows]) for k in rows[0]}
     out['latitude_deg'] = np.degrees(phi)
     H = out['H_km']
@@ -89,5 +84,8 @@ def solve_2d(inputs, *, scenario, n_lat=37, nx=31, dt=1e12, max_steps=1500, tol=
     out['n_interpolated'] = int(np.sum(~ok))
     if not ok.all():   # fill non-physical columns from their neighbours
         out['H_km'] = np.interp(out['latitude_deg'], out['latitude_deg'][ok], H[ok]) if ok.any() else H
-    out['status'] = 'ok' if ok.sum() >= n_lat * 0.5 else 'rejected: thickness'
+    if not out['converged'].all():
+        out['status'] = 'not converged'
+    else:
+        out['status'] = 'ok' if ok.sum() >= n_lat * 0.5 else 'rejected: thickness'
     return out

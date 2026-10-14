@@ -24,12 +24,10 @@ def warm_start(p, q_basal):
     return float(np.clip(k * (c.MELT_TEMP - p['T_surf']) / q_basal * 8.0, 5e3, 100e3))
 
 
-def run_column(p, q_ocean, H0, *, nx=31, dt=1e12, max_steps=1500, tol=1e-12):
-    """Step one column until |dH/dt| < tol (m/s) or max_steps; returns the solver."""
+def run_column(p, q_ocean, H0, *, nx=31, dt=1e12, **run_kw):
+    """Run one column to equilibrium (see ThermalSolver.run); returns the solver."""
     solver = ThermalSolver(p, H0, nx=nx, dt=dt)
-    for _ in range(max_steps):
-        if abs(solver.step(q_ocean)) < tol:
-            break
+    solver.run(q_ocean, **run_kw)
     return solver
 
 
@@ -37,7 +35,7 @@ def column_outputs(solver):
     """Thickness and convection diagnostics of a finished column (km for lengths)."""
     s, H_km = solver.state, solver.H / 1e3
     out = {'H_km': H_km, 'D_cond_km': s.D_cond / 1e3, 'D_conv_km': s.D_conv / 1e3, 'Ra': s.Ra, 'Nu': s.Nu,
-           'T_c': s.T_c, 'Ti': s.Ti, 'steps': solver.steps}
+           'T_c': s.T_c, 'Ti': s.Ti, 'steps': solver.steps, 'converged': solver.converged}
     if s.D_conv > 0 and s.Ra < c.RA_CRIT:   # warm but subcritical sublayer: the whole shell conducts
         out.update(D_cond_km=H_km, D_conv_km=0.0, Nu=1.0)
     return out
@@ -50,7 +48,12 @@ def solve_1d(p, **solver_kw):
         raise ValueError(f"basal heat flux must be positive, got {q}")
     out = column_outputs(run_column(p, q, warm_start(p, q), **solver_kw))
     H = out['H_km']
-    out['status'] = 'ok' if 0.5 < H < p['D_H2O'] / 1e3 * 0.99 and H <= 200.0 else 'rejected: thickness'
+    if not out['converged']:
+        out['status'] = 'not converged'
+    elif 0.5 < H < p['D_H2O'] / 1e3 * 0.99 and H <= 200.0:
+        out['status'] = 'ok'
+    else:
+        out['status'] = 'rejected: thickness'
     return out
 
 
