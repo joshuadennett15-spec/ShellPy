@@ -1,7 +1,7 @@
 """Time-marching solver for one ice-shell column with a freezing/melting base.
 
-Heat equation rho cp dT/dt = div(k grad T) + q_tidal on a grid that stretches with
-the shell thickness H (0 = surface, 1 = base). Surface: fixed temperature. Base:
+Heat equation rho cp dT/dt = div(k grad T) + q_tidal in a spherical shell, on a grid that
+stretches with the shell thickness H (0 = surface, 1 = base). Surface: fixed temperature. Base:
 melting point, and the Stefan condition moves H. Crank-Nicolson in time with a
 backward-Euler start-up (Rannacher), flux-conservative finite differences in depth,
 and Picard iteration on the temperature-dependent coefficients.
@@ -16,12 +16,11 @@ from shellpy import convection, physics
 class ThermalSolver:
     """One column. p holds the sampled shell parameters; H0 is the starting thickness (m)."""
 
-    def __init__(self, p, H0, *, nx=31, dt=1e12, spherical=None, rannacher_steps=4):
+    def __init__(self, p, H0, *, nx=31, dt=1e12, rannacher_steps=4):
         self.p = p
         self.H = H0
         self.nx = nx
         self.dt = dt
-        self.spherical = H0 >= 30e3 if spherical is None else spherical
         self.rannacher_steps = rannacher_steps
         self.steps = 0
         self.converged = False
@@ -75,7 +74,7 @@ class ThermalSolver:
         """Conductances for interior nodes to their lower (fp) and upper (fm) neighbours, and the
         bottom face's conductivity scaled to the base area."""
         dz2 = (self.H / (self.nx - 1)) ** 2
-        G = (c.RADIUS - self.xi * self.H) ** 2 if self.spherical else np.ones(self.nx)   # area factor r^2
+        G = (c.RADIUS - self.xi * self.H) ** 2   # area factor r^2 of a spherical shell
         kG = convection.face_conductivity(k) * ((G[:-1] + G[1:]) / 2)
         return kG[1:] / (G[1:-1] * dz2), kG[:-1] / (G[1:-1] * dz2), kG[-1] / G[-1]
 

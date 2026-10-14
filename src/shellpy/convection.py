@@ -77,14 +77,12 @@ def convection_state(T, z, H, T_melt, Q_v):
 
 
 def conductivity_profile(T, z, H, T_melt, p):
-    """Effective conductivity at each node, with porosity, salt and convective enhancement.
+    """Effective conductivity at each node, with porosity and convective enhancement.
 
-    p holds the sampled shell parameters (Q_v, f_porosity, T_phi, f_salt, B_k).
-    Returns (k, ConvectionState).
+    p holds the sampled shell parameters (uses Q_v and f_porosity). Returns (k, ConvectionState).
     """
     k = physics.conductivity(T)
-    k = np.where(T < p['T_phi'], k * (1 - p['f_porosity']), k)   # ice colder than T_phi is porous
-    k = k * (1 + p['f_salt'] * (p['B_k'] - 1.0))
+    k = np.where(T < c.POROSITY_CURE_TEMP, k * (1 - p['f_porosity']), k)
     state = convection_state(T, z, H, T_melt, p['Q_v'])
     if state.is_convecting:
         k[state.idx_c:] *= state.Nu

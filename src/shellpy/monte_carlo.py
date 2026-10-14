@@ -14,8 +14,7 @@ from shellpy.solver import ThermalSolver
 
 def basal_heat_flux(p):
     """Ocean-to-ice heat flux (W/m^2): rocky-interior radiogenic plus silicate tidal heating."""
-    M_rock = (4.0 / 3.0) * np.pi * ((c.RADIUS - p['D_H2O']) ** 3) * c.SILICATE_DENSITY
-    return (p['H_rad'] * M_rock) / c.AREA + p['P_tidal'] / c.AREA
+    return p['q_radiogenic'] + p['q_tidal_silicate']
 
 
 def warm_start(p, q_basal):

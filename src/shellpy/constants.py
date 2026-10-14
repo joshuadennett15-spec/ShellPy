@@ -16,7 +16,7 @@ CLAUSIUS_CLAPEYRON = -7.4e-8         # K/Pa, slope of the melting curve
 LATENT_HEAT = 334_000.0              # J/kg
 ICE_DENSITY_REF = 917.0              # kg/m^3, at the melting point
 THERMAL_EXPANSION = 1.6e-4           # 1/K
-SILICATE_DENSITY = 3500.0            # kg/m^3, used for the rocky-interior mass
+POROSITY_CURE_TEMP = 150.0           # K, ice warmer than this has lost its porosity
 
 # Rheology
 GAS_CONSTANT = 8.314                 # J/(mol K)

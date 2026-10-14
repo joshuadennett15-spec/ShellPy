@@ -6,7 +6,6 @@ ShellPy v1 it changed the equilibrium thickness by under 0.1 km.
 """
 import numpy as np
 
-from shellpy import constants as c
 from shellpy import physics, sampling
 from shellpy.monte_carlo import column_outputs, run_column
 
@@ -18,8 +17,8 @@ SCENARIOS = {
     'lemasquerier2023_polar_strong': ('polar_enhanced', 0.819),   # same, mantle tidal fraction 0.9
 }
 
-SHARED = ('d_grain', 'd_del', 'D0v', 'D0b', 'mu_ice', 'D_H2O', 'Q_v', 'Q_b',
-          'H_rad', 'f_porosity', 'f_salt', 'T_phi', 'B_k')
+SHARED = ('d_grain', 'd_del', 'D0v', 'D0b', 'Q_v', 'Q_b', 'mu_ice', 'D_H2O', 'f_porosity',
+          'q_radiogenic', 'q_tidal_silicate')
 
 
 def surface_temperature(phi, T_eq, T_floor):
@@ -44,11 +43,8 @@ def ocean_heat_flux(phi, q_mean, scenario):
     return q_mean * (1.0 + a * np.cos(phi) ** 2) / (1.0 + 2.0 * a / 3.0)
 
 
-def sample_latitude_parameters(seed_sequence, q_tidal_scale=1.2):
-    """Shared shell parameters plus the latitude forcing anchors for one 2D sample.
-
-    q_tidal_scale multiplies the silicate tidal part of the basal flux (1.2 in the thesis runs).
-    """
+def sample_latitude_parameters(seed_sequence):
+    """Shared shell parameters plus the latitude forcing anchors for one 2D sample."""
     shared_seq, latitude_seq = seed_sequence.spawn(2)
     p = sampling.sample_parameters(np.random.default_rng(shared_seq))
     rng = np.random.default_rng(latitude_seq)
@@ -57,24 +53,25 @@ def sample_latitude_parameters(seed_sequence, q_tidal_scale=1.2):
     inputs['T_floor'] = min(float(np.clip(rng.normal(46.0, 4.0), 38.0, 55.0)), p['T_surf'] - 1.0)
     inputs['epsilon_eq'] = float(np.clip(10 ** rng.normal(np.log10(6e-6), 0.15), 3e-6, 1.2e-5))
     inputs['epsilon_pole'] = float(np.clip(10 ** rng.normal(np.log10(1.2e-5), 0.15), 6e-6, 2.5e-5))
-    rng.uniform(0.1, 0.9)   # v1 mantle-tidal-fraction draw; unused because every scenario fixes q*
-    M_rock = (4.0 / 3.0) * np.pi * ((c.RADIUS - p['D_H2O']) ** 3) * c.SILICATE_DENSITY
-    inputs['q_ocean_mean'] = (p['H_rad'] * M_rock) / c.AREA + q_tidal_scale * (p['P_tidal'] / c.AREA)
     return inputs
 
 
-def sample_2d(i, seed, q_tidal_scale=1.2):
+def sample_2d(i, seed):
     """Inputs of sample i of a 2D ensemble."""
-    return sample_latitude_parameters(np.random.SeedSequence([seed, i]), q_tidal_scale)
+    return sample_latitude_parameters(np.random.SeedSequence([seed, i]))
 
 
-def solve_2d(inputs, *, scenario, n_lat=37, **solver_kw):
-    """Equilibrium thickness at n_lat latitudes. Outputs are arrays over latitude, plus 'status'."""
+def solve_2d(inputs, *, scenario, n_lat=37, q_tidal_scale=1.2, **solver_kw):
+    """Equilibrium thickness at n_lat latitudes. Outputs are arrays over latitude, plus 'status'.
+
+    q_tidal_scale multiplies the silicate tidal part of the basal flux (1.2 in the thesis runs).
+    """
     phi = np.linspace(0, np.pi / 2, n_lat)
     T_s = surface_temperature(phi, inputs['T_eq'], inputs['T_floor'])
     eps = tidal_strain(phi, inputs['epsilon_eq'], inputs['epsilon_pole'])
-    q = ocean_heat_flux(phi, inputs['q_ocean_mean'], scenario)
-    H0 = float(np.clip(physics.conductivity(190.0) * 170.0 / inputs['q_ocean_mean'] * 1.5, 5e3, 80e3))
+    q_mean = inputs['q_radiogenic'] + q_tidal_scale * inputs['q_tidal_silicate']
+    q = ocean_heat_flux(phi, q_mean, scenario)
+    H0 = float(np.clip(physics.conductivity(190.0) * 170.0 / q_mean * 1.5, 5e3, 80e3))
     rows = [column_outputs(run_column({**inputs, 'T_surf': T_s[j], 'epsilon_0': eps[j]}, q[j], H0, **solver_kw))
             for j in range(n_lat)]
     out: dict = {k: np.array([r[k] for r in rows]) for k in rows[0]}
