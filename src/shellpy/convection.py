@@ -67,7 +67,9 @@ def convection_state(T, z, H, T_melt, p):
     if warm.size == 0:
         return ConvectionState(len(T) - 1, H, 0.0, T_c, Ti, 0.0, 1.0, False)
     i = int(warm[0])
-    if i > 0 and T[i] > T[i - 1]:   # interpolate the depth where T == T_c
+    if i > 1 and T[i - 1] > T[i - 2]:   # extend the lid's gradient to T == T_c: the sublayer side is Nu times flatter
+        D_cond = min(z[i - 1] + (T_c - T[i - 1]) / (T[i - 1] - T[i - 2]) * (z[i - 1] - z[i - 2]), z[i])
+    elif i > 0 and T[i] > T[i - 1]:   # interpolate the depth where T == T_c
         D_cond = z[i - 1] + (T_c - T[i - 1]) / (T[i] - T[i - 1]) * (z[i] - z[i - 1])
     else:
         D_cond = z[i]
@@ -91,6 +93,14 @@ def conductivity_profile(T, z, H, T_melt, p):
     return k, state
 
 
-def face_conductivity(k):
-    """Harmonic-mean conductivity between neighbouring nodes (flux-conservative)."""
-    return 2.0 * k[:-1] * k[1:] / (k[:-1] + k[1:])
+def face_conductivity(k, state, z):
+    """Conductivity of each face between neighbouring nodes at depths z: the harmonic mean
+    (each node's half cell in series), except where the lid base lies inside the cell. There
+    the lid share (plain k) and the sublayer share (Nu-enhanced k) follow the lid base's
+    depth, so the convecting layer starts at D_cond rather than at the next node."""
+    kf = 2.0 * k[:-1] * k[1:] / (k[:-1] + k[1:])
+    i = state.idx_c
+    if state.is_convecting and i > 0:
+        f = (state.D_cond - z[i - 1]) / (z[i] - z[i - 1])   # lid fraction of the cell
+        kf[i - 1] = 1.0 / (f / k[i - 1] + (1.0 - f) / k[i])
+    return kf

@@ -23,7 +23,7 @@ def warm_start(p, q_basal):
     return float(np.clip(k * (c.MELT_TEMP - p['T_surf']) / q_basal * 8.0, 5e3, 100e3))
 
 
-def run_column(p, q_ocean, H0, *, nx=31, dt=1e12, **run_kw):
+def run_column(p, q_ocean, H0, *, nx=121, dt=1e12, **run_kw):
     """Run one column to equilibrium (see ThermalSolver.run); returns the solver."""
     solver = ThermalSolver(p, H0, nx=nx, dt=dt)
     solver.run(q_ocean, **run_kw)

@@ -17,7 +17,7 @@ def surface_to_supplied_ratio(p):
     k, _, _, q_tidal, state = s.properties(s.T)
     dz = s.H / (s.nx - 1)
     r = c.RADIUS - s.xi * s.H
-    lost = face_conductivity(k)[0] * (s.T[1] - s.T[0]) / dz * ((r[0] + r[1]) / 2) ** 2
+    lost = face_conductivity(k, state, s.xi * s.H)[0] * (s.T[1] - s.T[0]) / dz * ((r[0] + r[1]) / 2) ** 2
     supplied = q_ocean * r[-1] ** 2 + trapezoid(q_tidal * r**2, dx=dz)
     return lost / supplied, state
 

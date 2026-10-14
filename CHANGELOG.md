@@ -27,6 +27,7 @@ Each fix is measured on the same 300-sample 1D ensemble (seed 10042).
 | 2. Energy-conserving base | 295 | 40.2 | 22.1-78.3 | 100% | 3471 |
 | 3. Priors and geometry | 293 | 37.2 | 22.3-76.1 | 100% | 4058 |
 | 4. Convection from the sampled rheology | 293 | 40.5 | 22.3-72.1 | 76% | 3637 |
+| 5. Grid-converged lid base | 275 | 38.9 | 22.1-75.6 | 74% | 5008 |
 
 1. **Run to equilibrium.** v1 stopped after 1500 steps, or at the first step with
    |dH/dt| < 1e-12 m/s; most samples were still thinning from the warm start. A column
@@ -69,6 +70,25 @@ Each fix is measured on the same 300-sample 1D ensemble (seed 10042).
    coarse grains (median 1.3 mm) stay conductive and thin; the convecting ones have a median
    grain size of 0.46 mm. gamma is 3.1-3.3 across the convecting samples, below the range
    DV2021 calibrated their law on, so the Nu law itself still needs checking against the paper.
+
+5. **Grid-converged lid base.** The convecting sublayer started at the first grid node warmer
+   than T_c, so on the 31-node grid the lid base could only sit at a node, 1-3 km apart.
+   Convecting shells got stuck at grid-dependent thicknesses: against a 241-node run of the
+   same code, 1 sample in 10 was off by more than 2.6 km and the worst by 22 km, and some
+   parameter sets showed two convecting equilibria that merged as the grid was refined. Now:
+   - the lid-base depth extends the lid's temperature gradient to T_c (the sublayer side is
+     Nu times flatter, so interpolating linearly across the cell misplaced it by up to half
+     a cell);
+   - the face the lid base crosses gets the lid and sublayer conductivities in series,
+     weighted by where the lid base is, so convection starts at D_cond, not at the next node;
+   - backward Euler replaces Crank-Nicolson. At dt = 1e12 s Crank-Nicolson leaves
+     grid-scale oscillations undamped, and these grew once conductivity followed the lid
+     base smoothly. The equilibrium does not depend on the time scheme;
+   - 121 nodes instead of 31, at the same run time (Python overhead dominates).
+   Against 241 nodes (60 samples), 9 in 10 samples are now within 0.03 km and the worst
+   within 0.6 km. 20 samples now grow through the ocean (5 before): the grid had been holding
+   some convecting shells too thin. 5 samples reach equilibrium but are flagged as not
+   converged; see fix 6.
 
 ### Known problems inherited from v1 (to be fixed)
 
