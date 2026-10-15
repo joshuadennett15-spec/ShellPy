@@ -179,6 +179,9 @@ Each fix is measured on the same 300-sample 1D ensemble (seed 10042).
     interior at the melting point (`interior_melting`, their partial-melt regime) and 40 have
     gamma or Ra_eff outside the calibrated range (`outside_dv_calibration`, mostly Ra_eff up to
     8e9). 52 samples freeze the ocean through (19 before).
+    In the full 15,000-sample run (seed 10042, both starts), 192 of the 12,199 samples ok from both
+    starts (1.6%) end more than 0.2 km apart, at most 9.2 km, so the onset hysteresis is rarer
+    than in v1 but not as rare as the 300-sample check suggests.
 
 ### Known problems
 
