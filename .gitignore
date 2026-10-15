@@ -19,3 +19,4 @@ venv/
 
 # Generated ensembles (scripts/make_dataset.py)
 results/
+results_*.log
