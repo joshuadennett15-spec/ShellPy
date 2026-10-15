@@ -31,6 +31,8 @@ Each fix is measured on the same 300-sample 1D ensemble (seed 10042).
 | 6. Convergence by net drift | 280 | 39.1 | 22.0-76.1 | 75% | 5000 |
 | 7. Both branches: thin start | 280 | 32.8 | 21.0-60.3 | 33% | 3900 |
 | 7. Both branches: thick start | 280 | 39.1 | 22.0-76.1 | 75% | 5000 |
+| 8. Labelled outcomes: thin start | 281 | 32.8 | 21.0-60.7 | 33% | 4000 |
+| 8. Labelled outcomes: thick start | 281 | 39.3 | 22.1-76.1 | 75% | 5000 |
 
 1. **Run to equilibrium.** v1 stopped after 1500 steps, or at the first step with
    |dH/dt| < 1e-12 m/s; most samples were still thinning from the warm start. A column
@@ -109,6 +111,18 @@ Each fix is measured on the same 300-sample 1D ensemble (seed 10042).
    6.6 km thicker (16-84%: 0.3-25.5 km, at most 69 km). No sample convects from the thin start
    and conducts from the thick one. Every row so far used the thick start, so rows 1-6 and
    the thick row describe the convecting branch.
+
+8. **Labelled outcomes.** Every sample now keeps its outputs and says what happened to it,
+   so training data can be filtered or modelled without guessing why rows are missing.
+   `status` is 'ok', 'frozen through' (the shell reached the bottom of the hydrosphere: no
+   ocean is left), 'not converged', 'melted through' (thinned to the 0.5 km floor) or the
+   error raised. A column now stops as soon as it freezes through instead of growing past the
+   seafloor, and the thick start is capped at 95% of the hydrosphere. v1 replaced the
+   thickness of failed 2D columns by interpolating their neighbours, and called a 2D sample
+   'ok' if half its columns were; now 2D keeps every column's real thickness with its own
+   `column_status`, and the sample is 'ok' only if all of them are. The 19 'frozen through'
+   samples (6%, the same from both starts) were the 'rejected: thickness' rows. One sample
+   sits at 99.7% of its hydrosphere: the old 99% cut rejected it, now it is ok.
 
 ### Known problems inherited from v1 (to be fixed)
 

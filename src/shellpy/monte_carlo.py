@@ -23,14 +23,14 @@ def warm_start(p, q_basal, start):
     Many parameter sets have two equilibria, a thinner conductive shell and a thicker
     convecting one, and which one a column reaches depends on where it starts.
     'thin' is 5 km, a shell growing from thin; 'thick' is the conductive estimate
-    times 8, clipped to 5-100 km, a shell thinning from thick.
+    times 8, clipped to 5-100 km and to 95% of the hydrosphere, a shell thinning from thick.
     """
     if start == 'thin':
         return 5e3
     if start != 'thick':
         raise ValueError(f"start must be 'thin' or 'thick', got {start!r}")
     k = physics.conductivity((p['T_surf'] + c.MELT_TEMP) / 2)
-    return float(np.clip(k * (c.MELT_TEMP - p['T_surf']) / q_basal * 8.0, 5e3, 100e3))
+    return float(np.clip(k * (c.MELT_TEMP - p['T_surf']) / q_basal * 8.0, 5e3, min(100e3, 0.95 * p['D_H2O'])))
 
 
 def run_column(p, q_ocean, H0, *, nx=121, dt=1e12, **run_kw):
@@ -50,21 +50,35 @@ def column_outputs(solver):
     return out
 
 
-def solve_1d(p, *, start, **solver_kw):
-    """Equilibrium of one parameter set reached from start ('thin' or 'thick', see warm_start):
-    outputs plus a 'status' ('ok' or why it was rejected)."""
-    q = basal_heat_flux(p)
+def column_status(out, D_H2O):
+    """'ok' for a shell at equilibrium over a liquid ocean, otherwise what happened instead.
+
+    'frozen through': the shell reached the bottom of the hydrosphere, so no ocean is left.
+    'melted through': the shell thinned to the 0.5 km floor the solver holds it at.
+    """
+    if out['H_km'] >= D_H2O / 1e3:
+        return 'frozen through'
+    if not out['converged']:
+        return 'not converged'
+    if out['H_km'] <= 0.5:
+        return 'melted through'
+    return 'ok'
+
+
+def solve_column(p, q, start, **solver_kw):
+    """Outputs and status of one column with ocean heat flux q (W/m^2), run from start."""
     if not q > 0:
         raise ValueError(f"basal heat flux must be positive, got {q}")
+    solver_kw.setdefault('H_max', p['D_H2O'])
     out = column_outputs(run_column(p, q, warm_start(p, q, start), **solver_kw))
-    H = out['H_km']
-    if not out['converged']:
-        out['status'] = 'not converged'
-    elif 0.5 < H < p['D_H2O'] / 1e3 * 0.99 and H <= 200.0:
-        out['status'] = 'ok'
-    else:
-        out['status'] = 'rejected: thickness'
+    out['status'] = column_status(out, p['D_H2O'])
     return out
+
+
+def solve_1d(p, *, start, **solver_kw):
+    """Equilibrium of one parameter set reached from start ('thin' or 'thick', see warm_start):
+    outputs plus a 'status' (see column_status)."""
+    return solve_column(p, basal_heat_flux(p), start, **solver_kw)
 
 
 def sample_1d(i, seed):
@@ -84,7 +98,8 @@ def run_ensemble(n, seed, *, sample=sample_1d, solve=solve_1d, workers=None, **s
     """Run n samples in parallel: inputs = sample(i, seed), outputs = solve(inputs, **solve_kw).
 
     Returns a dict of arrays with one row per sample: every input, every output
-    and 'status'. Outputs of rows whose status is not 'ok' are NaN.
+    and 'status'. Every row keeps its outputs whatever its status; only rows that
+    raised an error have NaN outputs.
     """
     workers = workers or max(1, (os.cpu_count() or 2) - 1)
     job = partial(_run_one, seed=seed, sample=sample, solve=solve, solve_kw=solve_kw)
@@ -96,13 +111,13 @@ def run_ensemble(n, seed, *, sample=sample_1d, solve=solve_1d, workers=None, **s
     for status, count in statuses.items():
         if status != 'ok':
             print(f"{count}/{n} samples: {status}")
-    template = next((o for o in outs if o['status'] == 'ok'), None)
+    template = next((o for o in outs if not o['status'].startswith('error')), None)
     if template is None:
         raise RuntimeError(f"no sample succeeded: {dict(statuses)}")
     for k, v in template.items():
         if k != 'status':
             nan = np.full(np.shape(v), np.nan)
-            table[k] = np.array([o[k] if o['status'] == 'ok' else nan for o in outs])
+            table[k] = np.array([o.get(k, nan) for o in outs])
     table['status'] = np.array([o['status'] for o in outs])
     return table
 

@@ -7,7 +7,7 @@ ShellPy v1 it changed the equilibrium thickness by under 0.1 km.
 import numpy as np
 
 from shellpy import sampling
-from shellpy.monte_carlo import column_outputs, run_column, warm_start
+from shellpy.monte_carlo import solve_column
 
 # Ocean heat-flux scenarios: (pattern, q*), with q* the Lemasquerier et al. (2023) contrast parameter
 SCENARIOS = {
@@ -63,7 +63,8 @@ def sample_2d(i, seed):
 
 def solve_2d(inputs, *, scenario, start, n_lat=37, q_tidal_scale=1.2, **solver_kw):
     """Equilibrium thickness at n_lat latitudes, each column reached from start ('thin' or
-    'thick', see warm_start). Outputs are arrays over latitude, plus 'status'.
+    'thick', see warm_start). Outputs are arrays over latitude, including 'column_status'
+    (see column_status); 'status' is 'ok' when every column is, else the columns' problems.
 
     q_tidal_scale multiplies the silicate tidal part of the basal flux (1.2 in the thesis runs).
     """
@@ -73,17 +74,9 @@ def solve_2d(inputs, *, scenario, start, n_lat=37, q_tidal_scale=1.2, **solver_k
     q_mean = inputs['q_radiogenic'] + q_tidal_scale * inputs['q_tidal_silicate']
     q = ocean_heat_flux(phi, q_mean, scenario)
     columns = [{**inputs, 'T_surf': T_s[j], 'epsilon_0': eps[j]} for j in range(n_lat)]
-    rows = [column_outputs(run_column(p, q[j], warm_start(p, q[j], start), **solver_kw))
-            for j, p in enumerate(columns)]
+    rows = [solve_column(p, q[j], start, **solver_kw) for j, p in enumerate(columns)]
     out: dict = {k: np.array([r[k] for r in rows]) for k in rows[0]}
     out['latitude_deg'] = np.degrees(phi)
-    H = out['H_km']
-    ok = (H > 0.5) & (H < inputs['D_H2O'] / 1e3 * 0.99) & (H < 200)
-    out['n_interpolated'] = int(np.sum(~ok))
-    if not ok.all():   # fill non-physical columns from their neighbours
-        out['H_km'] = np.interp(out['latitude_deg'], out['latitude_deg'][ok], H[ok]) if ok.any() else H
-    if not out['converged'].all():
-        out['status'] = 'not converged'
-    else:
-        out['status'] = 'ok' if ok.sum() >= n_lat * 0.5 else 'rejected: thickness'
+    out['column_status'] = out.pop('status')
+    out['status'] = ', '.join(sorted(set(out['column_status']) - {'ok'})) or 'ok'
     return out

@@ -36,11 +36,12 @@ class ThermalSolver:
         q_tidal = physics.andrade_heating(eta, p['epsilon_0'], p['mu_ice'])
         return k, physics.density(T), physics.specific_heat(T), q_tidal, state
 
-    def run(self, q_ocean, max_steps=50_000, tol=0.2, window=200):
+    def run(self, q_ocean, max_steps=50_000, tol=0.2, window=200, H_max=np.inf):
         """Step in blocks of `window` steps until H moves less than tol (m) over a block (6 Myr at
-        the default dt), or max_steps is passed; returns self.converged. The net move is tested,
-        not each step, because at equilibrium H flickers by millimetres (the Picard tolerance)."""
-        while not self.converged and self.steps < max_steps:
+        the default dt), max_steps is passed, or H reaches H_max (the ocean has frozen through);
+        returns self.converged. The net move is tested, not each step, because at equilibrium H
+        flickers by millimetres (the Picard tolerance)."""
+        while not self.converged and self.steps < max_steps and self.H < H_max:
             H_start = self.H
             for _ in range(window):
                 self.step(q_ocean)
