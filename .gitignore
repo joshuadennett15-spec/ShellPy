@@ -16,3 +16,6 @@ venv/
 
 # Build metadata from pip install -e
 *.egg-info/
+
+# Generated ensembles (scripts/make_dataset.py)
+results/
