@@ -22,3 +22,11 @@ def test_small_2d_run():
     out = solve_2d(sample_2d(4, seed=1), scenario='lemasquerier2023_polar', start='thin', n_lat=3)
     assert out['status'] == 'ok'
     assert out['H_km'].shape == (3,) and np.all(out['converged'])
+
+
+def test_2d_sample_keeps_the_1d_values_as_area_means():
+    from shellpy.monte_carlo import sample_1d
+    p, s = sample_1d(3, seed=7), sample_2d(3, seed=7)
+    area_mean = lambda f: quad(lambda phi: f(phi) * np.cos(phi), 0, np.pi / 2)[0]
+    assert area_mean(lambda phi: surface_temperature(phi, s['T_eq'], s['T_floor'])) == pytest.approx(p['T_surf'], rel=1e-5)
+    assert area_mean(lambda phi: tidal_strain(phi, s['epsilon_eq'], s['epsilon_pole']) ** 2) == pytest.approx(p['epsilon_0'] ** 2, rel=1e-9)

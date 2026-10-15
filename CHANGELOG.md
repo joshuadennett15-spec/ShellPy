@@ -132,7 +132,28 @@ Each fix is measured on the same 300-sample 1D ensemble (seed 10042).
    either way. The viscosity is now the creep law's own value. No sample of the 300 moves by
    more than 0.14 km, but the prior's fine-grain tail is no longer silently altered.
 
+10. **One prior for 1D and 2D.** Howell (2021, Table 2) gives the surface temperature
+    (104 +- 7 K) and tidal strain as global means, so a 2D sample is now the 1D sample with
+    the same index, spread over latitude so that the area-weighted means are the 1D values:
+    mean surface temperature = T_surf (sets the equatorial temperature, given the polar one),
+    mean squared strain = epsilon_0^2 with a pole/equator strain ratio of 2, and mean ocean heat
+    flux = the 1D basal flux. v1's 2D drew its own strains (equator 6e-6, pole 1.2e-5, 0.15 dex)
+    beside the 1D 1.2e-5 at 0.3 dex, used the 1D mean temperature as the equatorial one, and
+    multiplied the silicate tidal flux by 1.2; all three are gone. The Soderlund et al. (2014)
+    scenario uses q* = 0.40, from their statement that the ocean heat flux "varies by about 40%
+    with latitude, with a clear maximum at the equator" (the thesis archive used 0.40; the code
+    had 0.45). 1D results are unchanged. 2D, 40 samples, 7 latitudes, thick start: median
+    thickness at the equator / pole goes from 54.8 / 50.9 to 39.8 / 38.8 km (uniform ocean
+    flux) and from 45.9 / 58.3 to 36.4 / 43.8 km (Soderlund).
+    Open: the pole/equator strain ratio of 2 is v1's, citing Tobie et al. (2003), not yet checked
+    against the paper; and a 104 K global mean puts the equator near 116 K, warmer than the
+    96 K equatorial mean of Ashkenazy (2019), whose global mean is about 90 K.
+
 ### Known problems inherited from v1 (to be fixed)
 
-- 1D and 2D priors differ (tidal strain, a 1.2x tidal flux factor in 2D).
-- The DV2021 Nusselt law is applied at gamma ~ 3, outside its calibrated range.
+- The DV2021 Nusselt law is applied to the convecting sublayer at gamma ~ 3. DV2021 calibrated
+  it on the whole stagnant-lid shell (gamma 9.2-18.4, Ra_eff 2e5-2e8; their SI S3 applies it to
+  Europa that way), and the interior temperature law in `convection.py` (c1 = 1.43,
+  c2 = -0.03) and THETA_LID = 2.24 are from Deschamps & Sotin (2001), not DV2021. Applying
+  DV2021 as published is on branch `wip/dv2021-whole-shell`; it puts most convecting shells
+  where DV2021's own interior temperature reaches the melting point, outside its laws.
