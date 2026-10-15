@@ -33,6 +33,7 @@ Each fix is measured on the same 300-sample 1D ensemble (seed 10042).
 | 7. Both branches: thick start | 280 | 39.1 | 22.0-76.1 | 75% | 5000 |
 | 8. Labelled outcomes: thin start | 281 | 32.8 | 21.0-60.7 | 33% | 4000 |
 | 8. Labelled outcomes: thick start | 281 | 39.3 | 22.1-76.1 | 75% | 5000 |
+| 9. Unclipped viscosity: thin / thick | 281 | 32.8 / 39.3 | 21.0-60.7 / 22.1-76.1 | 33% / 75% | 4000 / 5000 |
 
 1. **Run to equilibrium.** v1 stopped after 1500 steps, or at the first step with
    |dH/dt| < 1e-12 m/s; most samples were still thinning from the warm start. A column
@@ -123,6 +124,13 @@ Each fix is measured on the same 300-sample 1D ensemble (seed 10042).
    `column_status`, and the sample is 'ok' only if all of them are. The 19 'frozen through'
    samples (6%, the same from both starts) were the 'rejected: thickness' rows. One sample
    sits at 99.7% of its hydrosphere: the old 99% cut rejected it, now it is ok.
+
+9. **Unclipped viscosity.** v1 clipped the diffusion-creep viscosity to 1e12-1e25 Pa s without
+   recording it. The lower bound is reached at the melting point by about 1% of prior draws
+   (the finest grains, down to 6e10 Pa s), where it changed Ra, Nu and tidal heating; the upper
+   bound is reached near the surface by almost every draw, where tidal heating is negligible
+   either way. The viscosity is now the creep law's own value. No sample of the 300 moves by
+   more than 0.14 km, but the prior's fine-grain tail is no longer silently altered.
 
 ### Known problems inherited from v1 (to be fixed)
 

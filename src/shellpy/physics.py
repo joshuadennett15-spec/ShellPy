@@ -41,7 +41,7 @@ def diffusion_viscosity(T, p):
     Db = p['D0b'] * np.exp(-p['Q_b'] / (R * T))
     d = p['d_grain']
     rate = (42 * c.MOLAR_VOLUME) / (R * T * d**2) * (Dv + (np.pi * p['d_del'] / d) * Db)
-    return np.clip(0.5 / rate, 1e12, 1e25)
+    return 0.5 / rate
 
 
 def andrade_heating(eta, epsilon_0, mu_ice):
