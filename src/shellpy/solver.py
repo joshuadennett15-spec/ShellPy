@@ -24,6 +24,7 @@ class ThermalSolver:
         self.dt = dt
         self.steps = 0
         self.converged = False
+        self.H_spread = np.nan                                # range of H over the last block of steps (m)
         self.xi = np.linspace(0, 1, nx)                       # normalised depth
         self.T = np.linspace(p['T_surf'], physics.melting_point(H0), nx)
         self.state = None                                     # ConvectionState of the latest solve
@@ -31,21 +32,29 @@ class ThermalSolver:
     def properties(self, T):
         """Conductivity (with convection), density, heat capacity, tidal heating and convection state."""
         p = self.p
-        k, state = convection.conductivity_profile(T, self.xi * self.H, self.H, physics.melting_point(self.H), p)
         eta = physics.diffusion_viscosity(T, p)
         q_tidal = physics.andrade_heating(eta, p['epsilon_0'], p['mu_ice'])
+        k, state = convection.conductivity_profile(T, self.xi * self.H, self.H, physics.melting_point(self.H), q_tidal, p)
         return k, physics.density(T), physics.specific_heat(T), q_tidal, state
 
     def run(self, q_ocean, max_steps=50_000, tol=0.2, window=200, H_max=np.inf):
-        """Step in blocks of `window` steps until H moves less than tol (m) over a block (6 Myr at
-        the default dt), max_steps is passed, or H reaches H_max (the ocean has frozen through);
-        returns self.converged. The net move is tested, not each step, because at equilibrium H
-        flickers by millimetres (the Picard tolerance)."""
+        """Step in blocks of `window` steps (6 Myr at the default dt) until the lowest and highest H
+        of a block are both within tol (m) of the previous block's, max_steps is passed, or H
+        reaches H_max (the ocean has frozen through); returns self.converged.
+
+        Whole blocks are compared, not single steps: at equilibrium H flickers by millimetres (the
+        Picard tolerance), and a shell at the convection onset can switch convection on and off,
+        cycling within a band tens of metres wide. A band that has stopped moving is the
+        equilibrium; its width is kept in self.H_spread."""
+        band = None
         while not self.converged and self.steps < max_steps and self.H < H_max:
-            H_start = self.H
+            Hs = [self.H]
             for _ in range(window):
                 self.step(q_ocean)
-            self.converged = abs(self.H - H_start) < tol
+                Hs.append(self.H)
+            new = (min(Hs), max(Hs))
+            self.converged = band is not None and abs(new[0] - band[0]) < tol and abs(new[1] - band[1]) < tol
+            band, self.H_spread = new, new[1] - new[0]
         return self.converged
 
     def step(self, q_ocean):
@@ -77,9 +86,9 @@ class ThermalSolver:
     def _solve_linear(self, T_coeff, T_old):
         """One backward-Euler solve with coefficients evaluated at T_coeff.
 
-        Returns the new temperatures and the heat flux conducted into the ice at its base:
-        the flux through the bottom cell face (Nu-enhanced where convecting) minus the tidal
-        heat generated in the bottom half cell, so the shell's energy budget closes.
+        Returns the new temperatures and the heat flux into the ice at its base. A conducting
+        shell takes the flux through the bottom cell face minus the tidal heat generated in the
+        bottom half cell, so its energy budget closes; a convecting one takes the DV2021 flux.
         """
         k, rho, cp, q_tidal, self.state = self.properties(T_coeff)
         fp, fm, k_base = self._face_factors(k, self.state)
@@ -95,4 +104,6 @@ class ThermalSolver:
         rhs[-1] = physics.melting_point(self.H)
         T = solve_banded((1, 1), ab, rhs)
         dz = self.H / (self.nx - 1)
+        if self.state.is_convecting:
+            return T, self.state.q_bot
         return T, k_base * (T[-1] - T[-2]) / dz - q_tidal[-1] * dz / 2

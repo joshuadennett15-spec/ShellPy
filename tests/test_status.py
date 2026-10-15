@@ -3,7 +3,7 @@ import numpy as np
 
 from shellpy.monte_carlo import solve_1d
 
-from cases import BISTABLE, CONVECTING
+from cases import CONVECTING, CONVECTING_OCEAN
 
 
 def test_shell_thicker_than_the_hydrosphere_is_frozen_through():
@@ -13,5 +13,5 @@ def test_shell_thicker_than_the_hydrosphere_is_frozen_through():
 
 
 def test_test_cases_are_labelled():
-    assert solve_1d(BISTABLE, start='thick')['status'] == 'ok'
-    assert solve_1d(CONVECTING, start='thick')['status'] == 'frozen through'   # equilibrium 142 km > D_H2O
+    assert solve_1d(CONVECTING_OCEAN, start='thick')['status'] == 'ok'
+    assert solve_1d(CONVECTING, start='thick')['status'] == 'frozen through'   # equilibrium 128 km > D_H2O

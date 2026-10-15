@@ -29,14 +29,16 @@ p = sample_parameters(np.random.default_rng(0))   # one draw from the priors
 print(solve_1d(p, start='thin'))                   # thickness, lid, Ra, Nu, ...
 
 if __name__ == "__main__":                         # ensembles run in parallel processes
-    for start in ('thin', 'thick'):                # one table per branch, same inputs
+    for start in ('thin', 'thick'):                # one table per start, same inputs
         table = run_ensemble(1000, seed=10042, start=start)   # one row per sample: inputs, outputs, status
         np.savez(f"ensemble_{start}.npz", **table)
 ```
 
-Many parameter sets have two equilibria: a conductive shell reached by growing from thin,
-and a thicker convecting shell reached by thinning from thick. Every solve takes
-`start='thin'` or `start='thick'`, so run both and compare them row by row.
+Every solve takes `start='thin'` (a shell growing from 5 km) or `start='thick'` (thinning from
+a thick guess). With the DV2021 convection closure nearly every parameter set reaches the same
+equilibrium from both; run both to see the few that do not (at the convection onset).
+Each row carries labels: `status` ('ok', 'frozen through', 'melted through', 'not converged',
+or an error), `interior_melting`, `outside_dv_calibration` and `H_spread_km`.
 ```
 
 Latitude-resolved runs use `shellpy.latitude`:

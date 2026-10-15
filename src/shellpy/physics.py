@@ -44,6 +44,14 @@ def diffusion_viscosity(T, p):
     return 0.5 / rate
 
 
+def viscous_temperature_scale(T, p):
+    """Delta T_v = (-d ln(eta)/dT)^-1 (K) of the diffusion-creep viscosity (DV2021 Eq. 22)."""
+    R = c.GAS_CONSTANT
+    Dv = p['D0v'] * np.exp(-p['Q_v'] / (R * T))
+    Db = (np.pi * p['d_del'] / p['d_grain']) * p['D0b'] * np.exp(-p['Q_b'] / (R * T))
+    return 1.0 / ((Dv * p['Q_v'] + Db * p['Q_b']) / ((Dv + Db) * R * T**2) - 1.0 / T)
+
+
 def andrade_heating(eta, epsilon_0, mu_ice):
     """Volumetric tidal heating (W/m^3) of an Andrade solid: 0.5 w eps0^2 Im(G*).
 

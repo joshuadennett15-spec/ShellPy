@@ -43,11 +43,11 @@ def run_column(p, q_ocean, H0, *, nx=121, dt=1e12, **run_kw):
 def column_outputs(solver):
     """Thickness and convection diagnostics of a finished column (km for lengths)."""
     s, H_km = solver.state, solver.H / 1e3
-    out = {'H_km': H_km, 'D_cond_km': s.D_cond / 1e3, 'D_conv_km': s.D_conv / 1e3, 'Ra': s.Ra, 'Nu': s.Nu,
-           'T_c': s.T_c, 'Ti': s.Ti, 'steps': solver.steps, 'converged': solver.converged}
-    if s.D_conv > 0 and s.Ra < c.RA_CRIT:   # warm but subcritical sublayer: the whole shell conducts
-        out.update(D_cond_km=H_km, D_conv_km=0.0, Nu=1.0)
-    return out
+    return {'H_km': H_km, 'D_cond_km': s.D_cond / 1e3, 'D_conv_km': s.D_conv / 1e3, 'Ra': s.Ra, 'Nu': s.Nu,
+            'gamma': s.gamma, 'Ur': s.Ur, 'T_lid': s.T_lid, 'Tm': s.Tm,
+            'interior_melting': s.interior_melting, 'H_spread_km': solver.H_spread / 1e3,
+            'outside_dv_calibration': s.is_convecting and not (2e5 <= s.Ra <= 2e8 and 9.2 <= s.gamma <= 18.4),
+            'steps': solver.steps, 'converged': solver.converged}
 
 
 def column_status(out, D_H2O):

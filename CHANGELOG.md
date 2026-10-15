@@ -34,6 +34,7 @@ Each fix is measured on the same 300-sample 1D ensemble (seed 10042).
 | 8. Labelled outcomes: thin start | 281 | 32.8 | 21.0-60.7 | 33% | 4000 |
 | 8. Labelled outcomes: thick start | 281 | 39.3 | 22.1-76.1 | 75% | 5000 |
 | 9. Unclipped viscosity: thin / thick | 281 | 32.8 / 39.3 | 21.0-60.7 / 22.1-76.1 | 33% / 75% | 4000 / 5000 |
+| 11. DV2021 on the whole shell: thin / thick | 247 / 248 | 43.5 / 43.9 | 22.1-88.1 / 22.2-88.1 | 83% / 82% | 3800 / 4300 |
 
 1. **Run to equilibrium.** v1 stopped after 1500 steps, or at the first step with
    |dH/dt| < 1e-12 m/s; most samples were still thinning from the warm start. A column
@@ -149,11 +150,39 @@ Each fix is measured on the same 300-sample 1D ensemble (seed 10042).
     against the paper; and a 104 K global mean puts the equator near 116 K, warmer than the
     96 K equatorial mean of Ashkenazy (2019), whose global mean is about 90 K.
 
-### Known problems inherited from v1 (to be fixed)
+11. **DV2021 convection applied as published.** Checked against the full text (ESSOAr preprint
+    doi 10.1002/essoar.10507210.1). v1 applied the DV2021 heat-flux law (Eq. 23) to the
+    convecting sublayer only, at gamma ~ 3, and took the interior temperature (c1 = 1.43,
+    c2 = -0.03) and the lid-base temperature (2.24 viscous temperature scales) from Deschamps &
+    Sotin (2001). DV2021 calibrated their laws on the whole stagnant-lid shell (viscosity ratio
+    1e4-1e8, i.e. gamma 9.2-18.4; Ra_eff 2e5-2e8) and apply them to Europa that way (their SI
+    S3). Now, for the whole shell (surface to melting point, thickness H):
+    - gamma = Delta T / Delta T_v with Delta T_v = (-d ln eta / dT)^-1 of the sampled creep law
+      (Eq. 22), Ra_eff at the interior temperature Tm (Eqs. 10, S19);
+    - Tm from Eq. 21 including the tidal heating made in the shell, capped at the melting point;
+    - surface flux (Eq. 23), lid thickness (Eq. 26), lid-base temperature (Eq. 19);
+    - their procedure for a negative bottom flux: the Ur > 1 constants, then zero flux;
+    - convection when its surface flux beats conduction (Eq. 14), replacing Ra > 1000, which is
+      not in DV2021;
+    - a convecting shell takes the DV2021 bottom heat flux (Eq. 11) from the ocean; the solved
+      temperature profile (lid by conduction, sublayer conductivity times Nu so it carries the
+      DV2021 flux from the lid base to the melting point) sets the tidal heating.
+    DV2021's single conductivity is the conductivity integral of k = 612/T (with porosity) over
+    the shell's temperature range, so their conductive limit matches the conducting column.
+    Energy still balances (surface loss / supply within 0.5%).
+    Results: the two equilibria of fix 7 were an artefact of the sublayer closure. Of the 247
+    samples ok from both starts, 245 reach the same thickness and 2 differ by 0.8 and 1.1 km:
+    near the convection onset a column can switch convection on and off, and these two settle
+    into different bands. Such columns now count as converged when the band stops moving
+    (`H_spread_km`, at most 0.17 km; 10 samples), so 1 sample is unconverged, down from 10-16.
+    At equilibrium gamma is 13-19 and Ur < 1 in every sample. Labels: 35 samples have DV2021's
+    interior at the melting point (`interior_melting`, their partial-melt regime) and 40 have
+    gamma or Ra_eff outside the calibrated range (`outside_dv_calibration`, mostly Ra_eff up to
+    8e9). 52 samples freeze the ocean through (19 before).
 
-- The DV2021 Nusselt law is applied to the convecting sublayer at gamma ~ 3. DV2021 calibrated
-  it on the whole stagnant-lid shell (gamma 9.2-18.4, Ra_eff 2e5-2e8; their SI S3 applies it to
-  Europa that way), and the interior temperature law in `convection.py` (c1 = 1.43,
-  c2 = -0.03) and THETA_LID = 2.24 are from Deschamps & Sotin (2001), not DV2021. Applying
-  DV2021 as published is on branch `wip/dv2021-whole-shell`; it puts most convecting shells
-  where DV2021's own interior temperature reaches the melting point, outside its laws.
+### Known problems
+
+- DV2021 assume uniform internal heating; here it is the tidal heating of the solved profile,
+  concentrated in the warm sublayer. Their Eq. 14 conductive limit therefore differs a little
+  from the conducting column, which leaves the small onset hysteresis noted in fix 11.
+- The pole/equator strain ratio of 2 and the 104 K global-mean surface temperature (fix 10).
