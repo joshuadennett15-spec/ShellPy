@@ -30,6 +30,7 @@ def main():
     ap.add_argument('--scenario', choices=list(SCENARIOS))
     ap.add_argument('--starts', nargs='+', default=['thin', 'thick'], choices=['thin', 'thick'])
     ap.add_argument('--chunk', type=int, default=1000)
+    ap.add_argument('--workers', type=int, help='parallel processes (default: all cores but one)')
     ap.add_argument('--out', type=Path, default=Path('results'))
     a = ap.parse_args()
     if (a.kind == '2d') != (a.scenario is not None):
@@ -49,7 +50,7 @@ def main():
             if path.exists():
                 continue
             table = run_ensemble(m, a.seed, sample=partial(shifted, offset=first, sample=sample), solve=solve,
-                                 start=start, **kw)
+                                 workers=a.workers, start=start, **kw)
             table['sample_index'] = np.arange(first, first + m)
             np.savez(path, **table, commit=commit, seed=a.seed, start=start, scenario=str(a.scenario))
             print(f'{path}: {dict(zip(*np.unique(table["status"], return_counts=True)))}', flush=True)
