@@ -5,7 +5,7 @@ authors:
   - family-names: Dennett
     given-names: Joshua
     affiliation: "Department of Earth and Environmental Sciences, University of Manchester"
-version: 1.0.0
-date-released: 2026-05-05
+version: 1.1.0
+date-released: 2026-10-21
 license: MIT
 repository-code: "https://github.com/joshuadennett15-spec/ShellPy"

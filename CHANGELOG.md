@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.0.0 (in development)
+## 1.1.0 (2026-10-21)
 
 ### Restructure (results unchanged)
 
